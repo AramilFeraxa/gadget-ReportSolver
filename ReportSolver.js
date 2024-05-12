@@ -23,6 +23,8 @@ $(function () {
                         sectionNumber = this.parentElement.childNodes[1].href.match(/action=edit&section=(\d+)/)[1];
                     }
                     this.after(' | ');
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-close" data-section=' + sectionNumber + '>Close discussion</a>'));
+                    $(this).after(' | ');
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-stale" data-section="' + sectionNumber + '"> (C)</a>'));
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-stale" data-section=' + sectionNumber + '>stale</a>'));
                     $(this).after(' | ');
@@ -61,6 +63,12 @@ $(function () {
 		    var sectionNumber = $(this).data('section');
 		    $(this).text("Processing...");
 		    RS.doEdit(sectionNumber, '{{stale}}', 'Marked as stale');
+		});
+		
+		$('a.ReportSolver-close').click(function (e) {
+		    var sectionNumber = $(this).data('section');
+		    $(this).text("Processing...");
+		    RS.doEdit(sectionNumber, '{{section resolved|1=~~~~}}', 'Closed');
 		});
 		
 		RS.handleEditButtonClick();
