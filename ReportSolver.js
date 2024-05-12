@@ -204,7 +204,7 @@ $(function () {
 			}
 			var isSrRequestSection = wikitext.includes('{{sr-request') || wikitext.includes('{{SRUC');
 			if (isSrRequestSection) {
-				wikitext = wikitext.replace(/\|\s*status\s*=\s*[^\|]*\|/i, '|status = ' + status + '\n|');
+				wikitext = wikitext.replace(/\|\s*status\s*=\s*[^\|]*\|/i, '|status = ' + status + '\n |');
 			}
             wikitext = wikitext + '\n:' + comment;
             new mw.Api().postWithEditToken({
