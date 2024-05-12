@@ -202,6 +202,10 @@ $(function () {
 			if (!isCloseAction) {
 				comment = comment + '. ~~~~';
 			}
+			var isSrRequestSection = wikitext.includes('{{sr-request') || wikitext.includes('{{SRUC');
+			if (isSrRequestSection) {
+				wikitext = wikitext.replace(/\|\s*status\s*=\s*[^\|]*\|/i, '|status = ' + status);
+			}
             wikitext = wikitext + '\n:' + comment;
             new mw.Api().postWithEditToken({
                 action: 'edit',
