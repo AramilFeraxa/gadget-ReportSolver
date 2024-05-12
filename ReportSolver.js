@@ -7,7 +7,7 @@ $(function () {
     };
     window.ReportSolver = RS;
     var wgPageName = mw.config.get('wgPageName');
-    RS.summary = ' - with [[User:AramilFeraxa/ReportSolver.js|ReportSolver]]';
+    RS.summary = ' - with [[User:AramilFeraxa/ReportSolver|ReportSolver]]';
     var MSG = {
         dialogTitle: 'Close with a comment',
         dialogCancel: 'Cancel',
