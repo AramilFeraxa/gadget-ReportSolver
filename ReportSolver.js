@@ -198,10 +198,11 @@ $(function () {
         }).done(function (result) {
             var wikitext = result.parse.wikitext['*'];
             wikitext = wikitext.replace(/\{\{\s*Status\s*\|\s*[^\|\}]*\s*\}\}/g, '{{Status|' + status + '}}');
+			var isCloseAction = (editSummary === 'Closed');
+			if (!isCloseAction) {
+				comment = comment + '. ~~~~';
+			}
             wikitext = wikitext + '\n:' + comment;
-			if (!$(this).hasClass('ReportSolver-close')) {
-				wikitext += '. ~~~~';
-			}	
             new mw.Api().postWithEditToken({
                 action: 'edit',
                 title: pageTitle,
