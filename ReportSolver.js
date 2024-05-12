@@ -16,7 +16,7 @@ $(function () {
         dialogInfo: 'Template and signature will be inserted automatically.'
     };
     RS.setup = function () {
-        if ((wgPageName === 'Meta:Requests_for_help_from_a_sysop_or_bureaucrat') || wgPageName.startsWith('Steward_requests/') || RSConfig.allowedPages.includes(wgPageName) || [1, 15, 5, 103, 11].includes(mw.config.get('wgNamespaceNumber'))) {
+        if ((wgPageName === 'Meta:Requests_for_help_from_a_sysop_or_bureaucrat') || wgPageName.startsWith('Steward_requests/') || RSConfig.allowedPages.includes(wgPageName) || [1, 4, 5, 15, 11, 9].includes(mw.config.get('wgNamespaceNumber'))) {
             $('span.mw-editsection-bracket:first-child').each(function () {
                 try {
                     if (this.parentElement.childNodes.length > 1 && this.parentElement.childNodes[1].href) {
