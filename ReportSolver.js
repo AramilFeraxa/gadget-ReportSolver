@@ -47,31 +47,31 @@ $(function () {
 		$('a.ReportSolver-mark-done').click(function (e) {
 		    var sectionNumber = $(this).data('section');
 		    $(this).text("Processing...");
-		    RS.doEdit(sectionNumber, '{{done}}', 'Marked as done');
+		    RS.doEdit(sectionNumber, '{{done}}', 'Marked as done', 'done');
 		});
 		
 		$('a.ReportSolver-mark-rejected').click(function (e) {
 		    var sectionNumber = $(this).data('section');
 		    $(this).text("Processing...");
-		    RS.doEdit(sectionNumber, '{{notdone}}', 'Marked as not done');
+		    RS.doEdit(sectionNumber, '{{notdone}}', 'Marked as not done', 'not done');
 		});
 		
 		$('a.ReportSolver-mark-already-done').click(function (e) {
 		    var sectionNumber = $(this).data('section');
 		    $(this).text("Processing...");
-		    RS.doEdit(sectionNumber, '{{already done}}', 'Marked as already done');
+		    RS.doEdit(sectionNumber, '{{already done}}', 'Marked as already done', 'already done');
 		});
 		
 		$('a.ReportSolver-mark-on-hold').click(function (e) {
 		    var sectionNumber = $(this).data('section');
 		    $(this).text("Processing...");
-		    RS.doEdit(sectionNumber, '{{onhold}}', 'Marked as on hold');
+		    RS.doEdit(sectionNumber, '{{onhold}}', 'Marked as on hold', 'onhold');
 		});
 		
 		$('a.ReportSolver-mark-stale').click(function (e) {
 		    var sectionNumber = $(this).data('section');
 		    $(this).text("Processing...");
-		    RS.doEdit(sectionNumber, '{{stale}}', 'Marked as stale');
+		    RS.doEdit(sectionNumber, '{{stale}}', 'Marked as stale', 'stale');
 		});
 		
 		$('a.ReportSolver-close').click(function (e) {
