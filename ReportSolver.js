@@ -203,21 +203,6 @@ $(function () {
 	    var $headline = $('span.mw-headline').eq(sectionNumber - 1);
 		var sectionTitle = $headline.clone().find('small').remove().end().text().trim();
 	    var pageTitle = mw.config.get('wgPageName');
-	    if (editSummary === 'Closed') {
-	    	new mw.Api().postWithEditToken({
-            action: 'edit',
-            title: pageTitle,
-            section: sectionNumber,
-            text: '',
-            summary: '/* ' + sectionTitle + ' */ ' + editSummary + RS.summary,
-            minor: true,
-            nocreate: true
-        }).done(function (result) {
-            if (result && result.edit && result.edit.result && result.edit.result === 'Success') {
-                location.reload();
-            }
-        });
-	}	else {
         new mw.Api().get({
             action: 'parse',
             page: pageTitle,
@@ -253,8 +238,8 @@ $(function () {
                 }
             });
         });
-	};
-	};
+    };
+
 });
 
 mw.loader.using('mediawiki.api', function () {
