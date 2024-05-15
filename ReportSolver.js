@@ -211,7 +211,7 @@ $(function () {
             section: sectionNumber
         }).done(function (result) {
             var wikitext = result.parse.wikitext['*'];
-            wikitext = wikitext + '\n:' + comment;
+            wikitext = wikitext + '\n' + comment;
             new mw.Api().postWithEditToken({
                 action: 'edit',
                 title: pageTitle,
