@@ -31,6 +31,9 @@ $(function () {
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-on-hold" data-section="' + sectionNumber + '"> (C)</a>'));
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-on-hold" data-section=' + sectionNumber + '>on hold</a>'));
                     $(this).after(' | ');
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-already-done" data-section="' + sectionNumber + '"> (C)</a>'));
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-already-done" data-section=' + sectionNumber + '>already done</a>'));
+                    $(this).after(' | ');
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-rejected" data-section="' + sectionNumber + '"> (C)</a>'));
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-rejected" data-section=' + sectionNumber + '>not done</a>'));
                     $(this).after(' | ');
@@ -44,19 +47,25 @@ $(function () {
 		$('a.ReportSolver-mark-done').click(function (e) {
 		    var sectionNumber = $(this).data('section');
 		    $(this).text("Processing...");
-		    RS.doEdit(sectionNumber, '{{done}}', 'Marked as done', '+');
+		    RS.doEdit(sectionNumber, '{{done}}', 'Marked as done');
 		});
 		
 		$('a.ReportSolver-mark-rejected').click(function (e) {
 		    var sectionNumber = $(this).data('section');
 		    $(this).text("Processing...");
-		    RS.doEdit(sectionNumber, '{{notdone}}', 'Marked as not done', '-');
+		    RS.doEdit(sectionNumber, '{{notdone}}', 'Marked as not done');
+		});
+		
+		$('a.ReportSolver-mark-already-done').click(function (e) {
+		    var sectionNumber = $(this).data('section');
+		    $(this).text("Processing...");
+		    RS.doEdit(sectionNumber, '{{already done}}', 'Marked as already done');
 		});
 		
 		$('a.ReportSolver-mark-on-hold').click(function (e) {
 		    var sectionNumber = $(this).data('section');
 		    $(this).text("Processing...");
-		    RS.doEdit(sectionNumber, '{{onhold}}', 'Marked as on hold', '!');
+		    RS.doEdit(sectionNumber, '{{onhold}}', 'Marked as on hold');
 		});
 		
 		$('a.ReportSolver-mark-stale').click(function (e) {
@@ -95,6 +104,10 @@ $(function () {
 	                    template = '{{notdone}}. ';
 	                    editSummary = 'Marked as not done';
 	                    statusTemplate = 'notdone';
+	                }  else if (action === 'already-done') {
+	                    template = '{{already done}}. ';
+	                    editSummary = 'Marked as already done';
+	                    statusTemplate = 'already done';
 	                } else if (action === 'stale') {
 	                    template = '{{stale}}. ';
 	                    editSummary = 'Marked as stale';
