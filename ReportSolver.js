@@ -308,7 +308,41 @@ $(function () {
             });
         }
         else {
-            console.log(sectionTitle);
+            new mw.Api().get({
+                action: 'parse',
+                page: pageTitle,
+                prop: 'wikitext',
+                section: sectionNumber
+            }).done(function (result) {
+                var wikitext = result.parse.wikitext['*'];
+                wikitext = wikitext.replace(/\{\{\s*Status\s*\|\s*[^\|\}]*\s*\}\}/g, '{{Status|' + status + '}}');
+                var isCloseAction = (editSummary === 'Closed');
+                comment = comment.trim();
+                if (!comment.endsWith('.')) {
+                    comment += '.';
+                }
+                if (!isCloseAction) {
+                    comment += ' ~~~~';
+                }
+                var isSrRequestSection = wikitext.includes('{{sr-request') || wikitext.includes('{{SRUC');
+                if (isSrRequestSection) {
+                    wikitext = wikitext.replace(/\|\s*status\s*=\s*[^\|]*\|/i, '|status = ' + status + '\n |');
+                }
+                wikitext = wikitext + '\n:' + comment;
+                new mw.Api().postWithEditToken({
+                    action: 'edit',
+                    title: pageTitle,
+                    section: sectionNumber,
+                    text: wikitext,
+                    summary: '/* ' + sectionTitle + ' */ ' + editSummary + RS.summary,
+                    minor: true,
+                    nocreate: true
+                }).done(function (result) {
+                    if (result && result.edit && result.edit.result && result.edit.result === 'Success') {
+                        location.reload();
+                    }
+                });
+            });
         }
     };
 });
