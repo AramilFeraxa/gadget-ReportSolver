@@ -127,7 +127,7 @@ $(function () {
         $(document).off('click', '[class^="ReportSolver-edit-"]').on('click', '[class^="ReportSolver-edit-"]', function (e) {
             var sectionNumber = $(this).data('section');
 			var $headline = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]').closest('.mw-editsection').prevAll('.mw-headline').first();
-    		var sectionTitle = $headline.attr('id');
+    		var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
             var pageTitle = mw.config.get('wgPageName');
             var editSummary, template;
 
@@ -253,7 +253,7 @@ $(function () {
     RS.doEdit = function (sectionNumber, comment, editSummary, status) {
 	var $headline = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]').closest('.mw-editsection').prevAll('.mw-headline').first();
 
-    var sectionTitle = $headline.attr('id');
+    var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
     var pageTitle = mw.config.get('wgPageName');
         if (editSummary === 'Closed') {
             new mw.Api().postWithEditToken({
