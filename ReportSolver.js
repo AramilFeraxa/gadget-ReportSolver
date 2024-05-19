@@ -105,19 +105,19 @@ $(function () {
         $('a.ReportSolver-mark-deleted').click(function (e) {
             var sectionNumber = $(this).data('section');
             $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{subst:Icon|delete|Deleted}}', 'Deleted');
+            RS.doEdit(sectionNumber, '{{Icon|delete|Deleted}}', 'Deleted');
         });
 
         $('a.ReportSolver-mark-kept').click(function (e) {
             var sectionNumber = $(this).data('section');
             $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{subst:Icon|keep|Kept}}', 'Kept');
+            RS.doEdit(sectionNumber, '{{Icon|keep|Kept}}', 'Kept');
         });
 
         $('a.ReportSolver-mark-redirected').click(function (e) {
             var sectionNumber = $(this).data('section');
             $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{subst:Icon|redirect|Redirected}}', 'Redirected');
+            RS.doEdit(sectionNumber, '{{Icon|redirect|Redirected}}', 'Redirected');
         });
 
         RS.handleEditButtonClick();
@@ -156,15 +156,15 @@ $(function () {
                         editSummary = 'Marked as on hold';
                         statusTemplate = 'onhold';
                     } else if (action === 'deleted') {
-                        template = '{{subst:Icon|delete|Deleted}} ';
+                        template = '{{Icon|delete|Deleted}} ';
                         editSummary = 'Deleted';
                         statusTemplate = 'deleted';
                     } else if (action === 'kept') {
-                        template = '{{subst:Icon|keep|Kept}} ';
+                        template = '{{Icon|keep|Kept}} ';
                         editSummary = 'Kept';
                         statusTemplate = 'kept';
                     } else if (action === 'redirected') {
-                        template = '{{subst:Icon|redirect|Redirected}} ';
+                        template = '{{Icon|redirect|Redirected}} ';
                         editSummary = 'Redirected';
                         statusTemplate = 'redirected';
                     }
