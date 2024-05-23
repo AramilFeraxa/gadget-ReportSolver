@@ -126,7 +126,13 @@ $(function () {
     RS.handleEditButtonClick = function () {
         $(document).off('click', '[class^="ReportSolver-edit-"]').on('click', '[class^="ReportSolver-edit-"]', function (e) {
             var sectionNumber = $(this).data('section');
-			var $headline = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]').closest('.mw-editsection').prevAll('.mw-headline').first();
+			var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
+			var $mwEditSection = $editSectionLink.closest('.mw-editsection');
+			var $headline = $mwEditSection.prevAll('.mw-headline').first();
+			
+			if ($headline.length === 0) {
+			    $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
+			}
     		var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
             var pageTitle = mw.config.get('wgPageName');
             var editSummary, template;
@@ -251,8 +257,13 @@ $(function () {
     };
 
     RS.doEdit = function (sectionNumber, comment, editSummary, status) {
-	var $headline = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]').closest('.mw-editsection').prevAll('.mw-headline').first();
-
+	var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
+	var $mwEditSection = $editSectionLink.closest('.mw-editsection');
+	var $headline = $mwEditSection.prevAll('.mw-headline').first();
+	
+	if ($headline.length === 0) {
+	    $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
+	}
     var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
     var pageTitle = mw.config.get('wgPageName');
         if (editSummary === 'Closed') {
