@@ -298,9 +298,9 @@ $(function () {
             }).done(function (result) {
                 var wikitext = result.parse.wikitext['*'];
                 comment = comment.trim();
-                if (!comment.endsWith('.')) {
-                    comment += '.';
-                }
+				if (!comment.endsWith(".") && !comment.endsWith("!") && !comment.endsWith("?")) {
+					comment += ".";
+				}
                 comment += ' ~~~~';
                 wikitext = wikitext + '\n' + '----' + '\n' + comment;
                 new mw.Api().postWithEditToken({
