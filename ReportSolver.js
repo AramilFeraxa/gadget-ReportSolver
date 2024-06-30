@@ -38,17 +38,10 @@ $(function () {
             });
         }
         else if (wgPageName === 'Global sysops/Requests') {
-            $('span#Requests.mw-headline').each(function () {
-                try {
-                    if (this.parentElement.childNodes.length > 1 && this.parentElement.childNodes[1].href) {
-                        sectionNumber = this.parentElement.childNodes[1].href.match(/action=edit&section=(\d+)/)[1];
-                    }
-                    this.after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-close" data-section=' + sectionNumber + '>Clear requests</a>'));
-                }
-                catch (e) {
-                }
-            });
+            var requestsHeader = $('span#Requests.mw-headline');
+            if (requestsHeader.length) {
+                requestsHeader.parent().append($('<a href="javascript:void(0)" class="ReportSolver-clear" data-section="0">Clear requests</a>'));
+            }
         }
         else if ((wgPageName === 'Meta:Requests_for_help_from_a_sysop_or_bureaucrat') || wgPageName.startsWith('Steward_requests/') || RSConfig.allowedPages.includes(wgPageName) || [1, 4, 5, 15, 11, 9].includes(mw.config.get('wgNamespaceNumber'))) {
             $('span.mw-editsection-bracket:first-child').each(function () {
