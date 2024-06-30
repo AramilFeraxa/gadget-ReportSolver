@@ -38,13 +38,13 @@ $(function () {
             });
         }
         else if (wgPageName === 'Global sysops/Requests') {
-            var $header = $('#h-Requests');
+            var $header = $('h2[data-mw-thread-id="h-Requests"]');
             try {
                 if ($header.length > 0) {
                     sectionNumber = $header.data('section');
                 }
                 $header.after(' | ');
-                $header.after($('<a href="javascript:void(0)" class="ReportSolver-clear" data-section="1">Clear requests</a>'));
+                $header.after($('<a href="javascript:void(0)" class="ReportSolver-close" data-section=' + sectionNumber + '>Clear requests</a>'));
             }
             catch (e) {
             }
