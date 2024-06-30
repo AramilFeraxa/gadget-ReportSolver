@@ -37,12 +37,6 @@ $(function () {
                 }
             });
         }
-        else if (wgPageName === 'Global sysops/Requests') {
-            var requestsHeader = $('span#Requests.mw-headline');
-            if (requestsHeader.length) {
-                requestsHeader.parent().append($('<a href="javascript:void(0)" class="ReportSolver-clear" data-section="0">Clear requests</a>'));
-            }
-        }
         else if ((wgPageName === 'Meta:Requests_for_help_from_a_sysop_or_bureaucrat') || wgPageName.startsWith('Steward_requests/') || RSConfig.allowedPages.includes(wgPageName) || [1, 4, 5, 15, 11, 9].includes(mw.config.get('wgNamespaceNumber'))) {
             $('span.mw-editsection-bracket:first-child').each(function () {
                 try {
@@ -111,35 +105,35 @@ $(function () {
         $('a.ReportSolver-mark-deleted').click(function (e) {
             var sectionNumber = $(this).data('section');
             $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{subst:Icon|delete|Deleted}}', 'Deleted');
+            RS.doEdit(sectionNumber, '{{Icon|delete|Deleted}}', 'Deleted');
         });
 
         $('a.ReportSolver-mark-kept').click(function (e) {
             var sectionNumber = $(this).data('section');
             $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{subst:Icon|keep|Kept}}', 'Kept');
+            RS.doEdit(sectionNumber, '{{Icon|keep|Kept}}', 'Kept');
         });
 
         $('a.ReportSolver-mark-redirected').click(function (e) {
             var sectionNumber = $(this).data('section');
             $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{subst:Icon|redirect|Redirected}}', 'Redirected');
+            RS.doEdit(sectionNumber, '{{Icon|redirect|Redirected}}', 'Redirected');
         });
 
         RS.handleEditButtonClick();
-
-        $('a.ReportSolver-clear').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-            RS.doClear(sectionNumber);
-        });
     };
 
     RS.handleEditButtonClick = function () {
         $(document).off('click', '[class^="ReportSolver-edit-"]').on('click', '[class^="ReportSolver-edit-"]', function (e) {
             var sectionNumber = $(this).data('section');
-            var $headline = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]').closest('.mw-editsection').prevAll('.mw-headline').first();
-            var sectionTitle = $headline.text().trim();
+			var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
+			var $mwEditSection = $editSectionLink.closest('.mw-editsection');
+			var $headline = $mwEditSection.prevAll('.mw-headline').first();
+			
+			if ($headline.length === 0) {
+			    $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
+			}
+    		var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
             var pageTitle = mw.config.get('wgPageName');
             var editSummary, template;
 
@@ -168,15 +162,15 @@ $(function () {
                         editSummary = 'Marked as on hold';
                         statusTemplate = 'onhold';
                     } else if (action === 'deleted') {
-                        template = '{{subst:Icon|delete|Deleted}} ';
+                        template = '{{Icon|delete|Deleted}} ';
                         editSummary = 'Deleted';
                         statusTemplate = 'deleted';
                     } else if (action === 'kept') {
-                        template = '{{subst:Icon|keep|Kept}} ';
+                        template = '{{Icon|keep|Kept}} ';
                         editSummary = 'Kept';
                         statusTemplate = 'kept';
                     } else if (action === 'redirected') {
-                        template = '{{subst:Icon|redirect|Redirected}} ';
+                        template = '{{Icon|redirect|Redirected}} ';
                         editSummary = 'Redirected';
                         statusTemplate = 'redirected';
                     }
@@ -263,10 +257,15 @@ $(function () {
     };
 
     RS.doEdit = function (sectionNumber, comment, editSummary, status) {
-        var $headline = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]').closest('.mw-editsection').prevAll('.mw-headline').first();
-
-        var sectionTitle = $headline.text().trim();
-        var pageTitle = mw.config.get('wgPageName');
+	var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
+	var $mwEditSection = $editSectionLink.closest('.mw-editsection');
+	var $headline = $mwEditSection.prevAll('.mw-headline').first();
+	
+	if ($headline.length === 0) {
+	    $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
+	}
+    var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
+    var pageTitle = mw.config.get('wgPageName');
         if (editSummary === 'Closed') {
             new mw.Api().postWithEditToken({
                 action: 'parse',
@@ -299,9 +298,9 @@ $(function () {
             }).done(function (result) {
                 var wikitext = result.parse.wikitext['*'];
                 comment = comment.trim();
-                if (!comment.endsWith('.')) {
-                    comment += '.';
-                }
+				if (!comment.endsWith(".") && !comment.endsWith("!") && !comment.endsWith("?")) {
+					comment += ".";
+				}
                 comment += ' ~~~~';
                 wikitext = wikitext + '\n' + '----' + '\n' + comment;
                 new mw.Api().postWithEditToken({
@@ -357,35 +356,6 @@ $(function () {
             });
         }
     };
-
-    RS.doClear = function (sectionNumber) {
-        var pageTitle = mw.config.get('wgPageName');
-        new mw.Api().get({
-            action: 'parse',
-            page: pageTitle,
-            prop: 'wikitext',
-            section: sectionNumber
-        }).done(function (result) {
-            var wikitext = result.parse.wikitext['*'];
-            var startIndex = wikitext.indexOf("<!-- Edit below this line. New requests to the bottom. -->") + 1;
-            if (startIndex !== -1) {
-                wikitext = wikitext.substring(0, startIndex + '<!-- Edit below this line. New requests to the bottom. -->'.length);
-                new mw.Api().postWithEditToken({
-                    action: 'edit',
-                    title: pageTitle,
-                    section: sectionNumber,
-                    text: wikitext,
-                    summary: 'Clearing: all requests processed' + RS.summary,
-                    minor: true,
-                    nocreate: true
-                }).done(function (result) {
-                    if (result && result.edit && result.edit.result && result.edit.result === 'Success') {
-                        location.reload();
-                    }
-                });
-            }
-        });
-    }
 });
 
 mw.loader.using('mediawiki.api', function () {
