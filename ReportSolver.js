@@ -158,7 +158,7 @@ $(function () {
                         editSummary = 'Marked as stale';
                         statusTemplate = 'stale';
                     } else if (action === 'on-hold') {
-                        template = '{{onhold}}. ';
+                        template = '{{onhold}} ';
                         editSummary = 'Marked as on hold';
                         statusTemplate = 'onhold';
                     } else if (action === 'deleted') {
