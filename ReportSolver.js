@@ -238,7 +238,11 @@ $(function () {
                 var dialog = this;
                 if (action === 'submit') {
                     var comment = this.$body.find('textarea').val();
-                    var wikitext = template + comment;
+					if (comment.length > 0 && comment[0] === comment[0].toLowerCase()) {
+						var wikitext = template.replace(/\.\s*$/, '') + ' ' + comment;
+					} else {
+						wikitext = template + comment;
+					}
                     RS.doEdit(sectionNumber, wikitext, editSummary, statusTemplate);
                     dialog.close();
                 }
