@@ -293,7 +293,7 @@ $(function () {
                     }
                 });
             });
-        } else if (editSummary === 'Marked as done' || editSummary === 'Kept' || editSummary === 'Redirected') {
+        } else if (editSummary === 'Deleted' || editSummary === 'Kept' || editSummary === 'Redirected') {
             new mw.Api().get({
                 action: 'parse',
                 page: pageTitle,
@@ -306,7 +306,7 @@ $(function () {
 					comment += ".";
 				}
                 comment += ' ~~~~';
-                wikitext = wikitext + '\n\n\-\-\-\-\n\'\'\'' + 'Zostawiono' + '\'\'\'.  \~\~\~\~';
+                wikitext = wikitext + '\n' + '----' + '\n' + comment;
                 new mw.Api().postWithEditToken({
                     action: 'edit',
                     title: pageTitle,
