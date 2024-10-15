@@ -293,7 +293,7 @@ $(function () {
                     }
                 });
             });
-        } else if (editSummary === 'Deleted' || editSummary === 'Kept' || editSummary === 'Redirected') {
+        } else if (editSummary === 'Marked as done' || editSummary === 'Kept' || editSummary === 'Redirected') {
             new mw.Api().get({
                 action: 'parse',
                 page: pageTitle,
