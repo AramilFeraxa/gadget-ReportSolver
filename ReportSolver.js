@@ -306,7 +306,7 @@ $(function () {
 					comment += ".";
 				}
                 comment += ' ~~~~';
-                wikitext = wikitext + '\n\'\'\'' + '----\n' + 'Zostawiono' + '\'\'\'.  \~\~\~\~';
+                wikitext = wikitext + '\n\-\-\-\-\n\'\'\'' + 'Zostawiono' + '\'\'\'.  \~\~\~\~';
                 new mw.Api().postWithEditToken({
                     action: 'edit',
                     title: pageTitle,
