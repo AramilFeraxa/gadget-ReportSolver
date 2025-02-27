@@ -330,7 +330,7 @@ $(function () {
                 section: sectionNumber
             }).done(function (result) {
                 var wikitext = result.parse.wikitext['*'];
-                wikitext = wikitext.replace(/\{\{\s*Status\s*\|\s*[^\|\}]*\s*\}\}/g, '{{Status|' + status + '}}');
+				wikitext = wikitext.replace(/\{\{\s*Status\s*(?:\|[^}]*)?\}\}/g, '{{Status|' + status + '}}');
                 var isCloseAction = (editSummary === 'Closed');
                 comment = comment.trim();
                 if (!comment.endsWith('.')) {
