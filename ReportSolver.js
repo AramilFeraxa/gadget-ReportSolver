@@ -339,7 +339,7 @@ $(function () {
                 if (!isCloseAction) {
                     comment += ' ~~~~';
                 }
-                var isSrRequestSection = wikitext.includes('{{sr-request') || wikitext.includes('{{SRUC') || wikitext.includes('{{interwiki request');
+                var isSrRequestSection = wikitext.includes('{{sr-request') || wikitext.includes('{{SRUC') || wikitext.includes('{{CU request') || wikitext.includes('{{interwiki request');
                 if (isSrRequestSection) {
                     wikitext = wikitext.replace(/\|\s*status\s*=\s*[^\|]*\|/i, '|status = ' + status + '\n |');
                 }
