@@ -43,9 +43,14 @@ $(function () {
                     if (this.parentElement.childNodes.length > 1 && this.parentElement.childNodes[1].href) {
                         sectionNumber = this.parentElement.childNodes[1].href.match(/action=edit&section=(\d+)/)[1];
                     }
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-on-hold" data-section="' + sectionNumber + '"> (C)</a>'));
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-on-hold" data-section=' + sectionNumber + '>on hold</a>'));
+                    $(this).after(' | ');
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-rejected" data-section="' + sectionNumber + '"> (C)</a>'));
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-rejected" data-section=' + sectionNumber + '>not done</a>'));
                     this.after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-grant" data-section=' + sectionNumber + '>Grant</a>'));
-                } catch (e) {}
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-grant" data-section=' + sectionNumber + '>Mark as granted</a>'));
+                } catch (e) { }
             });
         }
         else if ((wgPageName === 'Meta:Requests_for_help_from_a_sysop_or_bureaucrat') || wgPageName.startsWith('Steward_requests/Global') || RSConfig.allowedPages.includes(wgPageName) || [1, 4, 5, 15, 11, 9].includes(mw.config.get('wgNamespaceNumber'))) {
@@ -130,69 +135,67 @@ $(function () {
             $(this).text("Processing...");
             RS.doEdit(sectionNumber, '{{Icon|redirect|Redirected}}', 'Redirected');
         });
-        
         $('a.ReportSolver-grant').click(function (e) {
-        var sectionNumber = $(this).data('section');
-        $(this).text("Processing...");
+            var sectionNumber = $(this).data('section');
+            $(this).text("Processing...");
 
-        function GrantDialog(config) {
-            GrantDialog.super.call(this, config);
-        }
-        OO.inheritClass(GrantDialog, OO.ui.ProcessDialog);
-
-        GrantDialog.static.name = "GrantDialog";
-        GrantDialog.static.title = "Grant Temporary Permission";
-        GrantDialog.static.actions = [
-            {
-                label: "Cancel",
-                flags: "safe",
-            },
-            {
-                action: 'submit',
-                label: "Submit",
-                flags: ["primary", "progressive"]
+            function GrantDialog(config) {
+                GrantDialog.super.call(this, config);
             }
-        ];
+            OO.inheritClass(GrantDialog, OO.ui.ProcessDialog);
 
-        GrantDialog.prototype.initialize = function () {
-            GrantDialog.super.prototype.initialize.call(this);
-            var rootPanel = new OO.ui.PanelLayout({
-                padded: true,
-                expanded: false,
-            });
-            var monthsInput = new OO.ui.TextInputWidget({
-                placeholder: 'Number of months'
-            });
-            var expiryInput = new OO.ui.TextInputWidget({
-                placeholder: 'Expiry date (YYYY-MM-DD)'
-            });
-            rootPanel.$element.append(monthsInput.$element, expiryInput.$element);
-            this.$body.append(rootPanel.$element);
-            this.monthsInput = monthsInput;
-            this.expiryInput = expiryInput;
-        };
-
-        GrantDialog.prototype.getActionProcess = function (action) {
-            var dialog = this;
-            if (action === 'submit') {
-                var months = this.monthsInput.getValue().trim();
-                var expiry = this.expiryInput.getValue().trim();
-                var dateParts = expiry.split('-');
-                if (dateParts.length === 3) {
-                    var wikitext = `{{TempSysop|${months}|${dateParts[0]}|${dateParts[1]}|${dateParts[2]}||automsg=1}} ~~~~`;
-                    RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions');
-                    dialog.close();
+            GrantDialog.static.name = "GrantDialog";
+            GrantDialog.static.title = "Grant Temporary Permission";
+            GrantDialog.static.actions = [
+                {
+                    label: "Cancel",
+                    flags: "safe",
+                },
+                {
+                    action: 'submit',
+                    label: "Submit",
+                    flags: ["primary", "progressive"]
                 }
-            }
-            return GrantDialog.super.prototype.getActionProcess.call(this, action);
-        };
+            ];
 
-        var grantDialog = new GrantDialog({ size: "medium" });
-        var windowManager = new OO.ui.WindowManager();
-        $(document.body).append(windowManager.$element);
-        windowManager.addWindows([grantDialog]);
-        windowManager.openWindow(grantDialog);
-    });
+            GrantDialog.prototype.initialize = function () {
+                GrantDialog.super.prototype.initialize.call(this);
+                var rootPanel = new OO.ui.PanelLayout({
+                    padded: true,
+                    expanded: false,
+                });
+                var monthsInput = new OO.ui.TextInputWidget({
+                    placeholder: 'Number of months'
+                });
+                rootPanel.$element.append(monthsInput.$element);
+                this.$body.append(rootPanel.$element);
+                this.monthsInput = monthsInput;
+            };
+
+            GrantDialog.prototype.getActionProcess = function (action) {
+                var dialog = this;
+                if (action === 'submit') {
+                    var months = parseInt(this.monthsInput.getValue().trim(), 10);
+                    if (!isNaN(months) && months > 0) {
+                        var currentDate = new Date();
+                        currentDate.setMonth(currentDate.getMonth() + months);
+                        var year = currentDate.getFullYear();
+                        var month = ('0' + (currentDate.getMonth() + 1)).slice(-2);
+                        var day = ('0' + currentDate.getDate()).slice(-2);
+                        var wikitext = `{{TempSysop|${months}|${year}|${month}|${day}||automsg=1}}`;
+                        RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions');
+                        dialog.close();
+                    }
+                }
+                return GrantDialog.super.prototype.getActionProcess.call(this, action);
+            };
+
+            var grantDialog = new GrantDialog({ size: "medium" });
+            var windowManager = new OO.ui.WindowManager();
+            $(document.body).append(windowManager.$element);
+            windowManager.addWindows([grantDialog]);
+            windowManager.openWindow(grantDialog);
+        });
 
         RS.handleEditButtonClick();
     };
@@ -200,14 +203,14 @@ $(function () {
     RS.handleEditButtonClick = function () {
         $(document).off('click', '[class^="ReportSolver-edit-"]').on('click', '[class^="ReportSolver-edit-"]', function (e) {
             var sectionNumber = $(this).data('section');
-			var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
-			var $mwEditSection = $editSectionLink.closest('.mw-editsection');
-			var $headline = $mwEditSection.prevAll('.mw-headline').first();
-			
-			if ($headline.length === 0) {
-			    $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
-			}
-    		var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
+            var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
+            var $mwEditSection = $editSectionLink.closest('.mw-editsection');
+            var $headline = $mwEditSection.prevAll('.mw-headline').first();
+
+            if ($headline.length === 0) {
+                $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
+            }
+            var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
             var pageTitle = mw.config.get('wgPageName');
             var editSummary, template;
 
@@ -312,11 +315,11 @@ $(function () {
                 var dialog = this;
                 if (action === 'submit') {
                     var comment = this.$body.find('textarea').val();
-					if (comment.length > 0 && comment[0] === comment[0].toLowerCase()) {
-						var wikitext = template.replace(/\.\s*$/, '') + ' ' + comment;
-					} else {
-						wikitext = template + comment;
-					}
+                    if (comment.length > 0 && comment[0] === comment[0].toLowerCase()) {
+                        var wikitext = template.replace(/\.\s*$/, '') + ' ' + comment;
+                    } else {
+                        wikitext = template + comment;
+                    }
                     RS.doEdit(sectionNumber, wikitext, editSummary, statusTemplate);
                     dialog.close();
                 }
@@ -333,17 +336,17 @@ $(function () {
             windowManager.openWindow(reportSolverDialog);
         });
     };
-    
+
     RS.doEdit = function (sectionNumber, comment, editSummary, status) {
-	var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
-	var $mwEditSection = $editSectionLink.closest('.mw-editsection');
-	var $headline = $mwEditSection.prevAll('.mw-headline').first();
-	
-	if ($headline.length === 0) {
-	    $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
-	}
-    var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
-    var pageTitle = mw.config.get('wgPageName');
+        var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
+        var $mwEditSection = $editSectionLink.closest('.mw-editsection');
+        var $headline = $mwEditSection.prevAll('.mw-headline').first();
+
+        if ($headline.length === 0) {
+            $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
+        }
+        var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
+        var pageTitle = mw.config.get('wgPageName');
         if (editSummary === 'Closed') {
             new mw.Api().postWithEditToken({
                 action: 'parse',
@@ -376,9 +379,9 @@ $(function () {
             }).done(function (result) {
                 var wikitext = result.parse.wikitext['*'];
                 comment = comment.trim();
-				if (!comment.endsWith(".") && !comment.endsWith("!") && !comment.endsWith("?")) {
-					comment += ".";
-				}
+                if (!comment.endsWith(".") && !comment.endsWith("!") && !comment.endsWith("?")) {
+                    comment += ".";
+                }
                 comment += ' ~~~~';
                 wikitext = wikitext + '\n' + '----' + '\n' + comment;
                 new mw.Api().postWithEditToken({
@@ -404,7 +407,7 @@ $(function () {
                 section: sectionNumber
             }).done(function (result) {
                 var wikitext = result.parse.wikitext['*'];
-				wikitext = wikitext.replace(/\{\{\s*Status\s*(?:\|[^}]*)?\}\}/g, '{{Status|' + status + '}}');
+                wikitext = wikitext.replace(/\{\{\s*Status\s*(?:\|[^}]*)?\}\}/g, '{{Status|' + status + '}}');
                 var isCloseAction = (editSummary === 'Closed');
                 comment = comment.trim();
                 if (!comment.endsWith('.')) {
@@ -442,3 +445,64 @@ mw.loader.using('mediawiki.api', function () {
     });
 });
 // </nowiki>
+$('a.ReportSolver-grant').click(function (e) {
+    var sectionNumber = $(this).data('section');
+    $(this).text("Processing...");
+
+    function GrantDialog(config) {
+        GrantDialog.super.call(this, config);
+    }
+    OO.inheritClass(GrantDialog, OO.ui.ProcessDialog);
+
+    GrantDialog.static.name = "GrantDialog";
+    GrantDialog.static.title = "Grant Temporary Permission";
+    GrantDialog.static.actions = [
+        {
+            label: "Cancel",
+            flags: "safe",
+        },
+        {
+            action: 'submit',
+            label: "Submit",
+            flags: ["primary", "progressive"]
+        }
+    ];
+
+    GrantDialog.prototype.initialize = function () {
+        GrantDialog.super.prototype.initialize.call(this);
+        var rootPanel = new OO.ui.PanelLayout({
+            padded: true,
+            expanded: false,
+        });
+        var monthsInput = new OO.ui.TextInputWidget({
+            placeholder: 'Number of months'
+        });
+        rootPanel.$element.append(monthsInput.$element);
+        this.$body.append(rootPanel.$element);
+        this.monthsInput = monthsInput;
+    };
+
+    GrantDialog.prototype.getActionProcess = function (action) {
+        var dialog = this;
+        if (action === 'submit') {
+            var months = parseInt(this.monthsInput.getValue().trim(), 10);
+            if (!isNaN(months) && months > 0) {
+                var currentDate = new Date();
+                currentDate.setMonth(currentDate.getMonth() + months);
+                var year = currentDate.getFullYear();
+                var month = ('0' + (currentDate.getMonth() + 1)).slice(-2);
+                var day = ('0' + currentDate.getDate()).slice(-2);
+                var wikitext = `{{TempSysop|${months}|${year}|${month}|${day}||automsg=1}} [[User:AramilFeraxa|<strong><span style="color:sienna; font-weight:bold">AramilFeraxa</span></strong>]] ([[User talk:AramilFeraxa|<span style="color:#BB0FFF"><small>talk</small></span>]]) 15:36, 4 March 2025 (UTC)`;
+                RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions');
+                dialog.close();
+            }
+        }
+        return GrantDialog.super.prototype.getActionProcess.call(this, action);
+    };
+
+    var grantDialog = new GrantDialog({ size: "medium" });
+    var windowManager = new OO.ui.WindowManager();
+    $(document.body).append(windowManager.$element);
+    windowManager.addWindows([grantDialog]);
+    windowManager.openWindow(grantDialog);
+});
