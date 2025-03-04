@@ -130,6 +130,69 @@ $(function () {
             $(this).text("Processing...");
             RS.doEdit(sectionNumber, '{{Icon|redirect|Redirected}}', 'Redirected');
         });
+        
+        $('a.ReportSolver-grant').click(function (e) {
+        var sectionNumber = $(this).data('section');
+        $(this).text("Processing...");
+
+        function GrantDialog(config) {
+            GrantDialog.super.call(this, config);
+        }
+        OO.inheritClass(GrantDialog, OO.ui.ProcessDialog);
+
+        GrantDialog.static.name = "GrantDialog";
+        GrantDialog.static.title = "Grant Temporary Permission";
+        GrantDialog.static.actions = [
+            {
+                label: "Cancel",
+                flags: "safe",
+            },
+            {
+                action: 'submit',
+                label: "Submit",
+                flags: ["primary", "progressive"]
+            }
+        ];
+
+        GrantDialog.prototype.initialize = function () {
+            GrantDialog.super.prototype.initialize.call(this);
+            var rootPanel = new OO.ui.PanelLayout({
+                padded: true,
+                expanded: false,
+            });
+            var monthsInput = new OO.ui.TextInputWidget({
+                placeholder: 'Number of months'
+            });
+            var expiryInput = new OO.ui.TextInputWidget({
+                placeholder: 'Expiry date (YYYY-MM-DD)'
+            });
+            rootPanel.$element.append(monthsInput.$element, expiryInput.$element);
+            this.$body.append(rootPanel.$element);
+            this.monthsInput = monthsInput;
+            this.expiryInput = expiryInput;
+        };
+
+        GrantDialog.prototype.getActionProcess = function (action) {
+            var dialog = this;
+            if (action === 'submit') {
+                var months = this.monthsInput.getValue().trim();
+                var expiry = this.expiryInput.getValue().trim();
+                var dateParts = expiry.split('-');
+                if (dateParts.length === 3) {
+                    var wikitext = `{{TempSysop|${months}|${dateParts[0]}|${dateParts[1]}|${dateParts[2]}||automsg=1}} ~~~~`;
+                    RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions');
+                    dialog.close();
+                }
+            }
+            return GrantDialog.super.prototype.getActionProcess.call(this, action);
+        };
+
+        var grantDialog = new GrantDialog({ size: "medium" });
+        var windowManager = new OO.ui.WindowManager();
+        $(document.body).append(windowManager.$element);
+        windowManager.addWindows([grantDialog]);
+        windowManager.openWindow(grantDialog);
+    });
 
         RS.handleEditButtonClick();
     };
@@ -270,69 +333,6 @@ $(function () {
             windowManager.openWindow(reportSolverDialog);
         });
     };
-
-$('a.ReportSolver-grant').click(function (e) {
-        var sectionNumber = $(this).data('section');
-        $(this).text("Processing...");
-
-        function GrantDialog(config) {
-            GrantDialog.super.call(this, config);
-        }
-        OO.inheritClass(GrantDialog, OO.ui.ProcessDialog);
-
-        GrantDialog.static.name = "GrantDialog";
-        GrantDialog.static.title = "Grant Temporary Permission";
-        GrantDialog.static.actions = [
-            {
-                label: "Cancel",
-                flags: "safe",
-            },
-            {
-                action: 'submit',
-                label: "Submit",
-                flags: ["primary", "progressive"]
-            }
-        ];
-
-        GrantDialog.prototype.initialize = function () {
-            GrantDialog.super.prototype.initialize.call(this);
-            var rootPanel = new OO.ui.PanelLayout({
-                padded: true,
-                expanded: false,
-            });
-            var monthsInput = new OO.ui.TextInputWidget({
-                placeholder: 'Number of months'
-            });
-            var expiryInput = new OO.ui.TextInputWidget({
-                placeholder: 'Expiry date (YYYY-MM-DD)'
-            });
-            rootPanel.$element.append(monthsInput.$element, expiryInput.$element);
-            this.$body.append(rootPanel.$element);
-            this.monthsInput = monthsInput;
-            this.expiryInput = expiryInput;
-        };
-
-        GrantDialog.prototype.getActionProcess = function (action) {
-            var dialog = this;
-            if (action === 'submit') {
-                var months = this.monthsInput.getValue().trim();
-                var expiry = this.expiryInput.getValue().trim();
-                var dateParts = expiry.split('-');
-                if (dateParts.length === 3) {
-                    var wikitext = `{{TempSysop|${months}|${dateParts[0]}|${dateParts[1]}|${dateParts[2]}||automsg=1}} ~~~~`;
-                    RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions');
-                    dialog.close();
-                }
-            }
-            return GrantDialog.super.prototype.getActionProcess.call(this, action);
-        };
-
-        var grantDialog = new GrantDialog({ size: "medium" });
-        var windowManager = new OO.ui.WindowManager();
-        $(document.body).append(windowManager.$element);
-        windowManager.addWindows([grantDialog]);
-        windowManager.openWindow(grantDialog);
-    });
     
     RS.doEdit = function (sectionNumber, comment, editSummary, status) {
 	var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
