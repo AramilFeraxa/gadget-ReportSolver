@@ -183,7 +183,7 @@ $(function () {
                         var month = ('0' + (currentDate.getMonth() + 1)).slice(-2);
                         var day = ('0' + currentDate.getDate()).slice(-2);
                         var wikitext = `{{TempSysop|${months}|${year}|${month}|${day}||automsg=1}}`;
-                        RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions');
+                        RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions', 'done');
                         dialog.close();
                     }
                 }
