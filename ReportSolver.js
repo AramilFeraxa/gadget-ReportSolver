@@ -49,6 +49,9 @@ $(function () {
                     $(this).after(' | ');
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-rejected" data-section="' + sectionNumber + '"> (C)</a>'));
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-rejected" data-section=' + sectionNumber + '>not done</a>'));
+$(this).after(' | ');
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-done" data-section="' + sectionNumber + '"> (C)</a>'));
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-done" data-section=' + sectionNumber + '>done</a>'));
                     this.after(' | ');
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-grant" data-section=' + sectionNumber + '>Mark as granted</a>'));
                 } catch (e) { }
