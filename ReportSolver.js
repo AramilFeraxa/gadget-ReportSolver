@@ -43,6 +43,7 @@ $(function () {
                     if (this.parentElement.childNodes.length > 1 && this.parentElement.childNodes[1].href) {
                         sectionNumber = this.parentElement.childNodes[1].href.match(/action=edit&section=(\d+)/)[1];
                     }
+					$(this).after(' | ');
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-on-hold" data-section="' + sectionNumber + '"> (C)</a>'));
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-on-hold" data-section=' + sectionNumber + '>on hold</a>'));
                     $(this).after(' | ');
