@@ -37,7 +37,7 @@ $(function () {
                 }
             });
         }
-        if (wgPageName === 'User:AramilFeraxa/test') {
+        if (wgPageName === 'Steward_requests/Permissions') {
             $('span.mw-editsection-bracket:first-child').each(function () {
                 try {
                     if (this.parentElement.childNodes.length > 1 && this.parentElement.childNodes[1].href) {
