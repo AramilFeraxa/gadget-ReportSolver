@@ -53,7 +53,7 @@ $(this).after(' | ');
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-done" data-section="' + sectionNumber + '"> (C)</a>'));
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-done" data-section=' + sectionNumber + '>done</a>'));
                     this.after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-grant" data-section=' + sectionNumber + '>Mark as granted</a>'));
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-grant" data-section=' + sectionNumber + '>Mark as granted (temp)</a>'));
                 } catch (e) { }
             });
         }
