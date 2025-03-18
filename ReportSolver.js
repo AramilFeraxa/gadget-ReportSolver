@@ -66,6 +66,9 @@ $(this).after(' | ');
                     this.after(' | ');
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-close" data-section=' + sectionNumber + '>Close discussion</a>'));
                     $(this).after(' | ');
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-withdrawn" data-section="' + sectionNumber + '"> (C)</a>'));
+                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-withdrawn" data-section=' + sectionNumber + '>withdrawn</a>'));
+                    $(this).after(' | ');
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-stale" data-section="' + sectionNumber + '"> (C)</a>'));
                     $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-stale" data-section=' + sectionNumber + '>stale</a>'));
                     $(this).after(' | ');
@@ -113,7 +116,13 @@ $(this).after(' | ');
         $('a.ReportSolver-mark-stale').click(function (e) {
             var sectionNumber = $(this).data('section');
             $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{stale}}', 'Marked as stale', 'stale');
+            RS.doEdit(sectionNumber, '{{stale}}', 'Marked as stale', 'not done');
+        });
+
+        $('a.ReportSolver-mark-withdrawn').click(function (e) {
+            var sectionNumber = $(this).data('section');
+            $(this).text("Processing...");
+            RS.doEdit(sectionNumber, '{{withdrawn}}', 'Marked as withdrawn', 'withdrawn');
         });
 
         $('a.ReportSolver-close').click(function (e) {
@@ -237,7 +246,11 @@ $(this).after(' | ');
                     } else if (action === 'stale') {
                         template = '{{stale}}. ';
                         editSummary = 'Marked as stale';
-                        statusTemplate = 'stale';
+                        statusTemplate = 'not done';
+                    }  else if (action === 'withdrawn') {
+                        template = '{{withdrawn}}. ';
+                        editSummary = 'Marked as withdrawn';
+                        statusTemplate = 'withdrawn';
                     } else if (action === 'on-hold') {
                         template = '{{onhold}} ';
                         editSummary = 'Marked as on hold';
