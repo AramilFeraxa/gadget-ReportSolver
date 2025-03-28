@@ -174,6 +174,14 @@ $(function () {
 
 
     RS.doEdit = function (sectionNumber, comment, editSummary, status) {
+        var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
+        var $mwEditSection = $editSectionLink.closest('.mw-editsection');
+        var $headline = $mwEditSection.prevAll('.mw-headline').first();
+
+        if ($headline.length === 0) {
+            $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
+        }
+        var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
         const pageTitle = mw.config.get('wgPageName');
         new mw.Api().postWithEditToken({
             action: 'parse', page: pageTitle, prop: 'wikitext', section: sectionNumber
@@ -198,7 +206,7 @@ $(function () {
             }
             new mw.Api().postWithEditToken({
                 action: 'edit', title: pageTitle, section: sectionNumber, text: wikitext,
-                summary: editSummary + RS.summary, minor: true, nocreate: true
+                summary: '/* ' + sectionTitle + ' */ ' + editSummary + RS.summary, minor: true, nocreate: true
             }).done(() => location.reload());
         });
     };
