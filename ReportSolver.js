@@ -1,525 +1,208 @@
-/* Forked from https://pl.wikipedia.org/w/index.php?title=Wikipedysta:AramilFeraxa/ReportSolver.js */
 // <nowiki>
 $(function () {
-    var RS = {};
-    const RSConfig = window.RSConfig || {
-        allowedPages: []
-    };
+    const RS = {};
+    const RSConfig = window.RSConfig || { allowedPages: [] };
     window.ReportSolver = RS;
-    var wgPageName = mw.config.get('wgPageName');
+    const wgPageName = mw.config.get('wgPageName');
+
     RS.summary = ' - with [[User:AramilFeraxa/ReportSolver|ReportSolver]]';
-    var MSG = {
+
+    const MSG = {
         dialogTitle: 'Close with a comment',
         dialogCancel: 'Cancel',
         dialogConfirm: 'Submit',
-        dialogMessage: 'Comment:',
         dialogInfo: 'Template and signature will be inserted automatically.'
     };
+
+    const pageConfigs = {
+        'Meta:Requests_for_deletion': [
+            { class: 'deleted', label: 'Mark as deleted', template: '{{Icon|delete|Deleted}}', summary: 'Deleted', status: 'deleted' },
+            { class: 'kept', label: 'kept', template: '{{Icon|keep|Kept}}', summary: 'Kept', status: 'kept' },
+            { class: 'redirected', label: 'redirected', template: '{{Icon|redirect|Redirected}}', summary: 'Redirected', status: 'redirected' },
+            { class: 'close', label: 'Close discussion', template: '{{section resolved|1=~~~~}}', summary: 'Closed', status: '' }
+        ],
+        'Steward_requests/Permissions': [
+            { class: 'grant', label: 'Mark as granted', template: '', summary: 'Granted temporary permissions', status: 'done' },
+            { class: 'done', label: 'done', template: '{{done}}', summary: 'Marked as done', status: 'done' },
+            { class: 'rejected', label: 'not done', template: '{{notdone}}', summary: 'Marked as not done', status: 'not done' },
+            { class: 'on-hold', label: 'on hold', template: '{{onhold}}', summary: 'Marked as on hold', status: 'onhold' }
+        ]
+    };
+
+    const defaultConfig = [
+        { class: 'done', label: 'Mark as done', template: '{{done}}', summary: 'Marked as done', status: 'done' },
+        { class: 'rejected', label: 'not done', template: '{{notdone}}', summary: 'Marked as not done', status: 'not done' },
+        { class: 'already-done', label: 'already done', template: '{{already done}}', summary: 'Marked as already done', status: 'already done' },
+        { class: 'on-hold', label: 'on hold', template: '{{onhold}}', summary: 'Marked as on hold', status: 'onhold' },
+        { class: 'stale', label: 'stale', template: '{{stale}}', summary: 'Marked as stale', status: 'not done' },
+        { class: 'withdrawn', label: 'withdrawn', template: '{{withdrawn}}', summary: 'Marked as withdrawn', status: 'withdrawn' },
+        { class: 'close', label: 'Close discussion', template: '{{section resolved|1=~~~~}}', summary: 'Closed', status: '' }
+    ];
+
     RS.setup = function () {
-        if (wgPageName === 'Meta:Requests_for_deletion') {
-            $('span.mw-editsection-bracket:first-child').each(function () {
-                try {
-                    if (this.parentElement.childNodes.length > 1 && this.parentElement.childNodes[1].href) {
-                        sectionNumber = this.parentElement.childNodes[1].href.match(/action=edit&section=(\d+)/)[1];
-                    }
-                    this.after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-close" data-section=' + sectionNumber + '>Close discussion</a>'));
+        const useDefault = (
+            wgPageName === 'Meta:Requests_for_help_from_a_sysop_or_bureaucrat' ||
+            wgPageName.startsWith('Steward_requests/Global') ||
+            RSConfig.allowedPages.includes(wgPageName) ||
+            [1, 4, 5, 15, 11, 9].includes(mw.config.get('wgNamespaceNumber'))
+        );
+
+        const config = useDefault ? defaultConfig : pageConfigs[wgPageName] || [];
+
+        $('span.mw-editsection-bracket:first-child').each(function () {
+            try {
+                const sectionNumber = $(this).siblings('a').attr('href').match(/section=(\d+)/)[1];
+                config.slice().reverse().forEach(option => {
                     $(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-redirected" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-redirected" data-section=' + sectionNumber + '>redirected</a>'));
-                    $(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-kept" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-kept" data-section=' + sectionNumber + '>kept</a>'));
-                    $(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-deleted" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-deleted" data-section=' + sectionNumber + '>Mark as deleted</a>'));
-                } catch (e) {
-                }
-            });
-        }
-        if (wgPageName === 'Steward_requests/Permissions') {
-            $('span.mw-editsection-bracket:first-child').each(function () {
-                try {
-                    if (this.parentElement.childNodes.length > 1 && this.parentElement.childNodes[1].href) {
-                        sectionNumber = this.parentElement.childNodes[1].href.match(/action=edit&section=(\d+)/)[1];
-                    }
-					$(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-on-hold" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-on-hold" data-section=' + sectionNumber + '>on hold</a>'));
-                    $(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-rejected" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-rejected" data-section=' + sectionNumber + '>not done</a>'));
-$(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-done" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-done" data-section=' + sectionNumber + '>done</a>'));
-                    this.after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-grant" data-section=' + sectionNumber + '>Mark as granted</a>'));
-                } catch (e) { }
-            });
-        }
-        else if ((wgPageName === 'Meta:Requests_for_help_from_a_sysop_or_bureaucrat') || wgPageName.startsWith('Steward_requests/Global') || RSConfig.allowedPages.includes(wgPageName) || [1, 4, 5, 15, 11, 9].includes(mw.config.get('wgNamespaceNumber'))) {
-            $('span.mw-editsection-bracket:first-child').each(function () {
-                try {
-                    if (this.parentElement.childNodes.length > 1 && this.parentElement.childNodes[1].href) {
-                        sectionNumber = this.parentElement.childNodes[1].href.match(/action=edit&section=(\d+)/)[1];
-                    }
-                    this.after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-close" data-section=' + sectionNumber + '>Close discussion</a>'));
-                    $(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-withdrawn" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-withdrawn" data-section=' + sectionNumber + '>withdrawn</a>'));
-                    $(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-stale" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-stale" data-section=' + sectionNumber + '>stale</a>'));
-                    $(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-on-hold" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-on-hold" data-section=' + sectionNumber + '>on hold</a>'));
-                    $(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-already-done" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-already-done" data-section=' + sectionNumber + '>already done</a>'));
-                    $(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-rejected" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-rejected" data-section=' + sectionNumber + '>not done</a>'));
-                    $(this).after(' | ');
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-edit-done" data-section="' + sectionNumber + '"> (C)</a>'));
-                    $(this).after($('<a href="javascript:void(0)" class="ReportSolver-mark-done" data-section=' + sectionNumber + '>Mark as done</a>'));
-                } catch (e) {
-
-                }
-            });
-        }
-
-        $('a.ReportSolver-mark-done').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{done}}', 'Marked as done', 'done');
-        });
-
-        $('a.ReportSolver-mark-rejected').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{notdone}}', 'Marked as not done', 'not done');
-        });
-
-        $('a.ReportSolver-mark-already-done').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{already done}}', 'Marked as already done', 'already done');
-        });
-
-        $('a.ReportSolver-mark-on-hold').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{onhold}}', 'Marked as on hold', 'onhold');
-        });
-
-        $('a.ReportSolver-mark-stale').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{stale}}', 'Marked as stale', 'not done');
-        });
-
-        $('a.ReportSolver-mark-withdrawn').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{withdrawn}}', 'Marked as withdrawn', 'withdrawn');
-        });
-
-        $('a.ReportSolver-close').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{section resolved|1=~~~~}}', 'Closed');
-        });
-
-        $('a.ReportSolver-mark-deleted').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{Icon|delete|Deleted}}', 'Deleted');
-        });
-
-        $('a.ReportSolver-mark-kept').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{Icon|keep|Kept}}', 'Kept');
-        });
-
-        $('a.ReportSolver-mark-redirected').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-            RS.doEdit(sectionNumber, '{{Icon|redirect|Redirected}}', 'Redirected');
-        });
-        $('a.ReportSolver-grant').click(function (e) {
-            var sectionNumber = $(this).data('section');
-            $(this).text("Processing...");
-
-            function GrantDialog(config) {
-                GrantDialog.super.call(this, config);
-            }
-            OO.inheritClass(GrantDialog, OO.ui.ProcessDialog);
-
-            GrantDialog.static.name = "GrantDialog";
-            GrantDialog.static.title = "Grant Temporary Permission";
-            GrantDialog.static.actions = [
-                {
-                    label: "Cancel",
-                    flags: "safe",
-                },
-                {
-                    action: 'submit',
-                    label: "Submit",
-                    flags: ["primary", "progressive"]
-                }
-            ];
-
-            GrantDialog.prototype.initialize = function () {
-                GrantDialog.super.prototype.initialize.call(this);
-                var rootPanel = new OO.ui.PanelLayout({
-                    padded: true,
-                    expanded: false,
+                    $(this).after($('<a>', {
+                        href: 'javascript:void(0)',
+                        class: `ReportSolver-edit-${option.class}`,
+                        'data-section': sectionNumber,
+                        text: ' (C)'
+                    }));
+                    $(this).after($('<a>', {
+                        href: 'javascript:void(0)',
+                        class: `ReportSolver-mark-${option.class}`,
+                        'data-section': sectionNumber,
+                        text: option.label
+                    }));
                 });
-                var monthsInput = new OO.ui.TextInputWidget({
-                    placeholder: 'Number of months'
-                });
-                rootPanel.$element.append(monthsInput.$element);
-                this.$body.append(rootPanel.$element);
-                this.monthsInput = monthsInput;
-            };
+            } catch (e) { console.error(e); }
+        });
 
-            GrantDialog.prototype.getActionProcess = function (action) {
-                var dialog = this;
-                if (action === 'submit') {
-                    var months = parseInt(this.monthsInput.getValue().trim(), 10);
-                    if (!isNaN(months) && months > 0) {
-                        var currentDate = new Date();
-                        currentDate.setMonth(currentDate.getMonth() + months);
-                        var year = currentDate.getFullYear();
-                        var month = ('0' + (currentDate.getMonth() + 1)).slice(-2);
-                        var day = ('0' + currentDate.getDate()).slice(-2);
-                        var wikitext = `{{TempSysop|${months}|${year}|${month}|${day}||automsg=1}}`;
-                        RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions', 'done');
-                        dialog.close();
-                    }
+        config.forEach(option => {
+            $(`a.ReportSolver-mark-${option.class}`).click(function () {
+                const sectionNumber = $(this).data('section');
+                $(this).text('Processing...');
+                if (option.class === 'grant') {
+                    RS.openGrantDialog(sectionNumber);
+                } else {
+                    RS.doEdit(sectionNumber, option.template, option.summary, option.status);
                 }
-                return GrantDialog.super.prototype.getActionProcess.call(this, action);
-            };
-
-            var grantDialog = new GrantDialog({ size: "medium" });
-            var windowManager = new OO.ui.WindowManager();
-            $(document.body).append(windowManager.$element);
-            windowManager.addWindows([grantDialog]);
-            windowManager.openWindow(grantDialog);
+            });
         });
 
         RS.handleEditButtonClick();
     };
 
     RS.handleEditButtonClick = function () {
-        $(document).off('click', '[class^="ReportSolver-edit-"]').on('click', '[class^="ReportSolver-edit-"]', function (e) {
-            var sectionNumber = $(this).data('section');
-            var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
-            var $mwEditSection = $editSectionLink.closest('.mw-editsection');
-            var $headline = $mwEditSection.prevAll('.mw-headline').first();
+        $(document).off('click', '[class^="ReportSolver-edit-"]').on('click', '[class^="ReportSolver-edit-"]', function () {
+            const sectionNumber = $(this).data('section');
+            const action = $(this).attr('class').split('ReportSolver-edit-')[1];
+            const config = [...defaultConfig, ...(pageConfigs[wgPageName] || [])].find(c => c.class === action);
+            RS.openDialog(sectionNumber, config);
+        });
+    };
+    
+    RS.openDialog = function (sectionNumber, config) {
+        function ReportSolverDialog(config) {
+            ReportSolverDialog.super.call(this, config);
+        }
+        OO.inheritClass(ReportSolverDialog, OO.ui.ProcessDialog);
 
-            if ($headline.length === 0) {
-                $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
-            }
-            var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
-            var pageTitle = mw.config.get('wgPageName');
-            var editSummary, template;
+        ReportSolverDialog.static.name = "ReportSolverDialog";
+        ReportSolverDialog.static.title = MSG.dialogTitle;
+        ReportSolverDialog.static.actions = [
+            { label: MSG.dialogCancel, flags: "safe" },
+            { action: 'submit', label: MSG.dialogConfirm, flags: ["primary", "progressive"] }
+        ];
 
-            var classList = $(this).attr('class').split(/\s+/);
-            for (var i = 0; i < classList.length; i++) {
-                if (classList[i].startsWith('ReportSolver-edit-')) {
-                    var action = classList[i].substring('ReportSolver-edit-'.length);
-                    if (action === 'done') {
-                        template = '{{done}}. ';
-                        editSummary = 'Marked as done';
-                        statusTemplate = 'done';
-                    } else if (action === 'rejected') {
-                        template = '{{notdone}}. ';
-                        editSummary = 'Marked as not done';
-                        statusTemplate = 'notdone';
-                    } else if (action === 'already-done') {
-                        template = '{{already done}}. ';
-                        editSummary = 'Marked as already done';
-                        statusTemplate = 'already done';
-                    } else if (action === 'stale') {
-                        template = '{{stale}}. ';
-                        editSummary = 'Marked as stale';
-                        statusTemplate = 'not done';
-                    }  else if (action === 'withdrawn') {
-                        template = '{{withdrawn}}. ';
-                        editSummary = 'Marked as withdrawn';
-                        statusTemplate = 'withdrawn';
-                    } else if (action === 'on-hold') {
-                        template = '{{onhold}} ';
-                        editSummary = 'Marked as on hold';
-                        statusTemplate = 'onhold';
-                    } else if (action === 'deleted') {
-                        template = '{{Icon|delete|Deleted}} ';
-                        editSummary = 'Deleted';
-                        statusTemplate = 'deleted';
-                    } else if (action === 'kept') {
-                        template = '{{Icon|keep|Kept}} ';
-                        editSummary = 'Kept';
-                        statusTemplate = 'kept';
-                    } else if (action === 'redirected') {
-                        template = '{{Icon|redirect|Redirected}} ';
-                        editSummary = 'Redirected';
-                        statusTemplate = 'redirected';
-                    }
-                    break;
-                }
-            }
+        ReportSolverDialog.prototype.initialize = function () {
+            ReportSolverDialog.super.prototype.initialize.call(this);
+            var rootPanel = new OO.ui.PanelLayout({ padded: true, expanded: false });
 
-            function ReportSolverDialog(config) {
-                ReportSolverDialog.super.call(this, config);
-            }
-            OO.inheritClass(ReportSolverDialog, OO.ui.ProcessDialog);
+            var commentInput = new OO.ui.MultilineTextInputWidget({ rows: 5, placeholder: 'Enter a comment...' });
+            var selectedOptionLabel = new OO.ui.LabelWidget({ label: "Chosen option:", classes: ['centered-label'] });
+            var editSummaryElement = $("<span>", { html: config.summary, class: "bold-text " + config.class });
+            var infoElement = $("<span>", { html: MSG.dialogInfo, class: "red-text" });
 
-            ReportSolverDialog.static.name = "ReportSolverDialog";
-            ReportSolverDialog.static.title = MSG.dialogTitle;
-            ReportSolverDialog.static.actions = [
-                {
-                    label: MSG.dialogCancel,
-                    flags: "safe",
-                },
-                {
-                    action: 'submit',
-                    label: MSG.dialogConfirm,
-                    flags: ["primary", "progressive"]
-                }
+            rootPanel.$element.append(commentInput.$element, infoElement, selectedOptionLabel.$element, editSummaryElement);
+            this.commentInput = commentInput;
+            this.$body.append(rootPanel.$element);
+
+            const styles = [
+                { class: "centered-label", css: "display: flex; align-items: center; justify-content: center; margin: 10px;" },
+                { class: "bold-text", css: "display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 10px;" },
+                { class: "red-text", css: "display: flex; color: lightblue; align-items: center; justify-content: center; font-weight: bold; margin: 10px;" },
+                { class: "done", css: "color: green;" },
+                { class: "rejected", css: "color: red;" },
+                { class: "already-done", css: "color: green;" },
+                { class: "on-hold", css: "color: blue;" },
+                { class: "stale", css: "color: orange;" },
+                { class: "withdrawn", css: "color: purple;" },
+                { class: "deleted", css: "color: red;" },
+                { class: "kept", css: "color: green;" },
+                { class: "redirected", css: "color: orange;" },
+                { class: "close", css: "color: gray;" }
             ];
 
-            ReportSolverDialog.prototype.initialize = function () {
-                ReportSolverDialog.super.prototype.initialize.call(this);
+            styles.forEach(style => mw.util.addCSS(`.${style.class} { ${style.css} font-weight: bold; margin: 10px; }`));
+        };
 
-                var rootPanel = new OO.ui.PanelLayout({
-                    padded: true,
-                    expanded: false,
-                });
+        ReportSolverDialog.prototype.getActionProcess = function (action) {
+            var dialog = this;
+            if (action === 'submit') {
+                var comment = dialog.commentInput.getValue();
+                var wikitext = config.template + (comment ? ' ' + comment : '');
+                RS.doEdit(sectionNumber, wikitext, config.summary, config.status);
+            }
+            return ReportSolverDialog.super.prototype.getActionProcess.call(this, action);
+        };
 
-                var commentInput = new OO.ui.MultilineTextInputWidget({
-                    rows: 5,
-                    value: '',
-                    placeholder: 'Enter a comment...'
-                });
-
-                var selectedOptionLabel = new OO.ui.LabelWidget({
-                    label: "Chosen option: ",
-                    classes: ['centered-label']
-                });
-
-                var editSummaryElement = $("<span>", {
-                    html: editSummary,
-                    class: "bold-text"
-                });
-
-                var infoElement = $("<span>", {
-                    html: MSG.dialogInfo,
-                    class: "red-text"
-                });
-
-                rootPanel.$element.append(commentInput.$element, infoElement, selectedOptionLabel.$element, editSummaryElement);
-                this.$body.append(rootPanel.$element);
-
-                mw.util.addCSS(".centered-label { display: flex; align-items: center; justify-content: center; margin: 10px; }");
-                mw.util.addCSS(".bold-text { display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 10px }");
-                mw.util.addCSS(".red-text { display: flex; color: red; align-items: center; justify-content: center; font-weight: bold; margin: 10px }");
-            };
-
-            ReportSolverDialog.prototype.getActionProcess = function (action) {
-                var dialog = this;
-                if (action === 'submit') {
-                    var comment = this.$body.find('textarea').val();
-                    if (comment.length > 0 && comment[0] === comment[0].toLowerCase()) {
-                        var wikitext = template.replace(/\.\s*$/, '') + ' ' + comment;
-                    } else {
-                        wikitext = template + comment;
-                    }
-                    RS.doEdit(sectionNumber, wikitext, editSummary, statusTemplate);
-                    dialog.close();
-                }
-                return ReportSolverDialog.super.prototype.getActionProcess.call(this, action);
-            };
-
-            var reportSolverDialog = new ReportSolverDialog({
-                size: "large",
-            });
-
-            var windowManager = new OO.ui.WindowManager();
-            $(document.body).append(windowManager.$element);
-            windowManager.addWindows([reportSolverDialog]);
-            windowManager.openWindow(reportSolverDialog);
-        });
+        var dialog = new ReportSolverDialog({ size: "large" });
+        var windowManager = new OO.ui.WindowManager();
+        $(document.body).append(windowManager.$element);
+        windowManager.addWindows([dialog]);
+        windowManager.openWindow(dialog);
     };
+
+
+
+    RS.openGrantDialog = function (sectionNumber) {
+        OO.ui.prompt('Number of months for temporary permission:', { textInput: { placeholder: 'Months' } })
+            .done(function (months) {
+                months = parseInt(months);
+                if (months > 0) {
+                    const date = new Date();
+                    date.setMonth(date.getMonth() + months);
+                    const y = date.getFullYear(), m = ('0' + (date.getMonth() + 1)).slice(-2), d = ('0' + date.getDate()).slice(-2);
+                    const wikitext = `{{TempSysop|${months}|${y}|${m}|${d}||automsg=1}} ~~~~`;
+                    RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions', 'done');
+                }
+            });
+    };
+
 
     RS.doEdit = function (sectionNumber, comment, editSummary, status) {
-        var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
-        var $mwEditSection = $editSectionLink.closest('.mw-editsection');
-        var $headline = $mwEditSection.prevAll('.mw-headline').first();
-
-        if ($headline.length === 0) {
-            $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
-        }
-        var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
-        var pageTitle = mw.config.get('wgPageName');
-        if (editSummary === 'Closed') {
-            new mw.Api().postWithEditToken({
-                action: 'parse',
-                page: pageTitle,
-                prop: 'wikitext',
-                section: sectionNumber
-            }).done(function (result) {
-                var wikitext = result.parse.wikitext['*'];
-                wikitext = wikitext + '\n' + comment;
-                new mw.Api().postWithEditToken({
-                    action: 'edit',
-                    title: pageTitle,
-                    section: sectionNumber,
-                    text: wikitext,
-                    summary: '/* ' + sectionTitle + ' */ ' + editSummary + RS.summary,
-                    minor: true,
-                    nocreate: true
-                }).done(function (result) {
-                    if (result && result.edit && result.edit.result && result.edit.result === 'Success') {
-                        location.reload();
-                    }
-                });
-            });
-        } else if (editSummary === 'Deleted' || editSummary === 'Kept' || editSummary === 'Redirected') {
-            new mw.Api().get({
-                action: 'parse',
-                page: pageTitle,
-                prop: 'wikitext',
-                section: sectionNumber
-            }).done(function (result) {
-                var wikitext = result.parse.wikitext['*'];
+        const pageTitle = mw.config.get('wgPageName');
+        new mw.Api().postWithEditToken({
+            action: 'parse', page: pageTitle, prop: 'wikitext', section: sectionNumber
+        }).done(function (result) {
+            let wikitext = result.parse.wikitext['*'];
+            if (editSummary === 'Closed') {
+                wikitext += '\n' + comment;
+            } else if (['Deleted', 'Kept', 'Redirected'].includes(editSummary)) {
                 comment = comment.trim();
-                if (!comment.endsWith(".") && !comment.endsWith("!") && !comment.endsWith("?")) {
-                    comment += ".";
-                }
+                if (!/[.!?]$/.test(comment)) comment += '.';
                 comment += ' ~~~~';
-                wikitext = wikitext + '\n' + '----' + '\n' + comment;
-                new mw.Api().postWithEditToken({
-                    action: 'edit',
-                    title: pageTitle,
-                    section: sectionNumber,
-                    text: wikitext,
-                    summary: '/* ' + sectionTitle + ' */ ' + editSummary + RS.summary,
-                    minor: true,
-                    nocreate: true
-                }).done(function (result) {
-                    if (result && result.edit && result.edit.result && result.edit.result === 'Success') {
-                        location.reload();
-                    }
-                });
-            });
-        }
-        else {
-            new mw.Api().get({
-                action: 'parse',
-                page: pageTitle,
-                prop: 'wikitext',
-                section: sectionNumber
-            }).done(function (result) {
-                var wikitext = result.parse.wikitext['*'];
-                wikitext = wikitext.replace(/\{\{\s*Status\s*(?:\|[^}]*)?\}\}/g, '{{Status|' + status + '}}');
-                var isCloseAction = (editSummary === 'Closed');
+                wikitext += '\n----\n' + comment;
+            } else {
+                wikitext = wikitext.replace(/\{\{\s*[Ss]tatus\s*(?:\|[^}]*)?\}\}/g, '{{Status|' + status + '}}');
                 comment = comment.trim();
-                if (!comment.endsWith('.')) {
-                    comment += '.';
+                if (!comment.endsWith('.')) comment += '.';
+                comment += ' ~~~~';
+                if (/\{\{(sr-request|SRUC|CU request|interwiki request)/i.test(wikitext)) {
+                    wikitext = wikitext.replace(/\|\s*[Ss]tatus\s*=\s*[^|]*\|/i, '|status = ' + status + '\n |');
                 }
-                if (!isCloseAction) {
-                    comment += ' ~~~~';
-                }
-                var isSrRequestSection = wikitext.includes('{{sr-request') || wikitext.includes('{{SRUC') || wikitext.includes('{{CU request') || wikitext.includes('{{interwiki request');
-                if (isSrRequestSection) {
-                    wikitext = wikitext.replace(/\|\s*status\s*=\s*[^\|]*\|/i, '|status = ' + status + '\n |');
-                }
-                wikitext = wikitext + '\n:' + comment;
-                new mw.Api().postWithEditToken({
-                    action: 'edit',
-                    title: pageTitle,
-                    section: sectionNumber,
-                    text: wikitext,
-                    summary: '/* ' + sectionTitle + ' */ ' + editSummary + RS.summary,
-                    minor: true,
-                    nocreate: true
-                }).done(function (result) {
-                    if (result && result.edit && result.edit.result && result.edit.result === 'Success') {
-                        location.reload();
-                    }
-                });
-            });
-        }
+                wikitext += '\n:' + comment;
+            }
+            new mw.Api().postWithEditToken({
+                action: 'edit', title: pageTitle, section: sectionNumber, text: wikitext,
+                summary: editSummary + RS.summary, minor: true, nocreate: true
+            }).done(() => location.reload());
+        });
     };
-});
 
-mw.loader.using('mediawiki.api', function () {
-    $(document).ready(function () {
-        window.ReportSolver.setup();
-    });
+    mw.loader.using('mediawiki.api', () => $(RS.setup));
 });
 // </nowiki>
-$('a.ReportSolver-grant').click(function (e) {
-    var sectionNumber = $(this).data('section');
-    $(this).text("Processing...");
-
-    function GrantDialog(config) {
-        GrantDialog.super.call(this, config);
-    }
-    OO.inheritClass(GrantDialog, OO.ui.ProcessDialog);
-
-    GrantDialog.static.name = "GrantDialog";
-    GrantDialog.static.title = "Grant Temporary Permission";
-    GrantDialog.static.actions = [
-        {
-            label: "Cancel",
-            flags: "safe",
-        },
-        {
-            action: 'submit',
-            label: "Submit",
-            flags: ["primary", "progressive"]
-        }
-    ];
-
-    GrantDialog.prototype.initialize = function () {
-        GrantDialog.super.prototype.initialize.call(this);
-        var rootPanel = new OO.ui.PanelLayout({
-            padded: true,
-            expanded: false,
-        });
-        var monthsInput = new OO.ui.TextInputWidget({
-            placeholder: 'Number of months'
-        });
-        rootPanel.$element.append(monthsInput.$element);
-        this.$body.append(rootPanel.$element);
-        this.monthsInput = monthsInput;
-    };
-
-    GrantDialog.prototype.getActionProcess = function (action) {
-        var dialog = this;
-        if (action === 'submit') {
-            var months = parseInt(this.monthsInput.getValue().trim(), 10);
-            if (!isNaN(months) && months > 0) {
-                var currentDate = new Date();
-                currentDate.setMonth(currentDate.getMonth() + months);
-                var year = currentDate.getFullYear();
-                var month = ('0' + (currentDate.getMonth() + 1)).slice(-2);
-                var day = ('0' + currentDate.getDate()).slice(-2);
-                var wikitext = `{{TempSysop|${months}|${year}|${month}|${day}||automsg=1}} [[User:AramilFeraxa|<strong><span style="color:sienna; font-weight:bold">AramilFeraxa</span></strong>]] ([[User talk:AramilFeraxa|<span style="color:#BB0FFF"><small>talk</small></span>]]) 15:36, 4 March 2025 (UTC)`;
-                RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions');
-                dialog.close();
-            }
-        }
-        return GrantDialog.super.prototype.getActionProcess.call(this, action);
-    };
-
-    var grantDialog = new GrantDialog({ size: "medium" });
-    var windowManager = new OO.ui.WindowManager();
-    $(document.body).append(windowManager.$element);
-    windowManager.addWindows([grantDialog]);
-    windowManager.openWindow(grantDialog);
-});
