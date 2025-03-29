@@ -203,7 +203,7 @@ $(function () {
             } else {
                 wikitext = wikitext.replace(/\{\{\s*[Ss]tatus\s*(?:\|[^}]*)?\}\}/g, '{{Status|' + status + '}}');
                 comment = comment.trim();
-                if (!comment.endsWith('.')) comment += '.';
+                if (!/[.!?}]$/.test(comment)) comment += '.';
                 comment += ' ~~~~';
                 if (/\{\{(sr-request|SRUC|CU request|interwiki request)/i.test(wikitext)) {
                     wikitext = wikitext.replace(/\|\s*[Ss]tatus\s*=\s*[^|]*\|/i, '|status = ' + status + '\n |');
