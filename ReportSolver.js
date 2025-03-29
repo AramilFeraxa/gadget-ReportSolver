@@ -166,7 +166,7 @@ $(function () {
                     const date = new Date();
                     date.setMonth(date.getMonth() + months);
                     const y = date.getFullYear(), m = ('0' + (date.getMonth() + 1)).slice(-2), d = ('0' + date.getDate()).slice(-2);
-                    const wikitext = `{{TempSysop|${months}|${y}|${m}|${d}||automsg=1}} ~~~~`;
+                    const wikitext = `{{TempSysop|${months}|${y}|${m}|${d}||automsg=1}}`;
                     RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions', 'done');
                 }
             });
