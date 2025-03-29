@@ -54,12 +54,14 @@ $(function () {
                 const sectionNumber = $(this).siblings('a').attr('href').match(/section=(\d+)/)[1];
                 config.slice().reverse().forEach(option => {
                     $(this).after(' | ');
-                    $(this).after($('<a>', {
-                        href: 'javascript:void(0)',
-                        class: `ReportSolver-edit-${option.class}`,
-                        'data-section': sectionNumber,
-                        text: ' (C)'
-                    }));
+                    if (!['close'].includes(option.class)) {
+                        $(this).after($('<a>', {
+                            href: 'javascript:void(0)',
+                            class: `ReportSolver-edit-${option.class}`,
+                            'data-section': sectionNumber,
+                            text: ' (C)'
+                        }));
+                    }
                     $(this).after($('<a>', {
                         href: 'javascript:void(0)',
                         class: `ReportSolver-mark-${option.class}`,
