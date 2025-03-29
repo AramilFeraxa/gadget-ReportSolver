@@ -140,14 +140,18 @@ $(function () {
         };
 
         ReportSolverDialog.prototype.getActionProcess = function (action) {
-            var dialog = this;
-            if (action === 'submit') {
-                var comment = dialog.commentInput.getValue();
-                var wikitext = config.template + (comment ? ' ' + comment : '');
-                RS.doEdit(sectionNumber, wikitext, config.summary, config.status);
-            }
-            return ReportSolverDialog.super.prototype.getActionProcess.call(this, action);
-        };
+    		var dialog = this;
+    		if (action === 'submit') {
+        		dialog.actions.setAbilities({ submit: false, cancel: false });
+        		dialog.pushPending();
+
+        		var comment = dialog.commentInput.getValue();
+        		var wikitext = config.template + (comment ? ' ' + comment : '');
+
+        		RS.doEdit(sectionNumber, wikitext, config.summary, config.status);
+    		}
+    		return ReportSolverDialog.super.prototype.getActionProcess.call(this, action);
+		};
 
         var dialog = new ReportSolverDialog({ size: "large" });
         var windowManager = new OO.ui.WindowManager();
