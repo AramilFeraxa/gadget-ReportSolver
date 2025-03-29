@@ -195,7 +195,7 @@ $(function () {
                 wikitext += '\n' + comment;
             } else if (['Deleted', 'Kept', 'Redirected'].includes(editSummary)) {
                 comment = comment.trim();
-                if (!/[.!?]$/.test(comment)) comment += '.';
+                if (!/[.!?}]$/.test(comment)) comment += '.';
                 comment += ' ~~~~';
                 wikitext += '\n----\n' + comment;
             } else {
