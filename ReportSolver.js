@@ -54,7 +54,7 @@ $(function () {
                 const sectionNumber = $(this).siblings('a').attr('href').match(/section=(\d+)/)[1];
                 config.slice().reverse().forEach(option => {
                     $(this).after(' | ');
-                    if (!['close'].includes(option.class)) {
+                    if (!['close', 'grant'].includes(option.class)) {
                         $(this).after($('<a>', {
                             href: 'javascript:void(0)',
                             class: `ReportSolver-edit-${option.class}`,
