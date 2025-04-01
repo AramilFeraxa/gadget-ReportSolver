@@ -173,7 +173,7 @@ $(function () {
         GrantDialog.static.name = 'GrantDialog';
         GrantDialog.static.title = 'Temporary Permission Duration';
         GrantDialog.static.actions = [
-            { action: 'cancel', label: 'Cancel', flags: 'safe' },
+            { label: MSG.dialogCancel, flags: "safe" },
             { action: 'submit', label: 'Grant', flags: ['primary', 'progressive'] }
         ];
     
@@ -187,29 +187,36 @@ $(function () {
                 inputmode: 'numeric'
             });
     
-            const label = new OO.ui.LabelWidget({
-                label: 'Please enter the number of months to grant temporary permission.'
-            });
-    
-            layout.$element.append(label.$element, this.input.$element);
+            layout.$element.append(this.input.$element);
             this.$body.append(layout.$element);
         };
     
         GrantDialog.prototype.getActionProcess = function (action) {
+            const dialog = this;
+        
             if (action === 'submit') {
-                const inputVal = parseInt(this.input.getValue(), 10);
-                if (isNaN(inputVal) || inputVal <= 0) {
+                dialog.actions.setAbilities({ submit: false, cancel: false });
+                dialog.pushPending();
+        
+                const months = parseInt(dialog.input.getValue(), 10);
+                if (isNaN(months) || months <= 0) {
                     alert('Please enter a valid number greater than 0.');
+                    dialog.popPending();
+                    dialog.actions.setAbilities({ submit: true, cancel: true });
                     return;
                 }
-    
+        
                 const date = new Date();
-                date.setMonth(date.getMonth() + inputVal);
-                const y = date.getFullYear(), m = ('0' + (date.getMonth() + 1)).slice(-2), d = ('0' + date.getDate()).slice(-2);
-                const wikitext = `{{TempSysop|${inputVal}|${y}|${m}|${d}||automsg=1}}`;
-    
+                date.setMonth(date.getMonth() + months);
+                const y = date.getFullYear(),
+                      m = String(date.getMonth() + 1).padStart(2, '0'),
+                      d = String(date.getDate()).padStart(2, '0');
+        
+                const wikitext = `{{TempSysop|${months}|${y}|${m}|${d}||automsg=1}}`;
+        
                 RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions', 'done');
             }
+        
             return GrantDialog.super.prototype.getActionProcess.call(this, action);
         };
     
