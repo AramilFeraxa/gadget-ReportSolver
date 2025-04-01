@@ -174,7 +174,7 @@ $(function () {
         GrantDialog.static.title = 'Temporary Permission Duration';
         GrantDialog.static.actions = [
             { label: MSG.dialogCancel, flags: "safe" },
-            { action: 'submit', label: 'Grant', flags: ['primary', 'progressive'] }
+            { action: 'submit', label: MSG.dialogConfirm, flags: ['primary', 'progressive'] }
         ];
     
         GrantDialog.prototype.initialize = function () {
