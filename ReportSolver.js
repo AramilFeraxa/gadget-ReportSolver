@@ -165,17 +165,59 @@ $(function () {
 
 
     RS.openGrantDialog = function (sectionNumber) {
-        OO.ui.prompt('Number of months for temporary permission:', { textInput: { placeholder: 'Months' } })
-            .done(function (months) {
-                months = parseInt(months);
-                if (months > 0) {
-                    const date = new Date();
-                    date.setMonth(date.getMonth() + months);
-                    const y = date.getFullYear(), m = ('0' + (date.getMonth() + 1)).slice(-2), d = ('0' + date.getDate()).slice(-2);
-                    const wikitext = `{{TempSysop|${months}|${y}|${m}|${d}||automsg=1}}`;
-                    RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions', 'done');
-                }
+        function GrantDialog(config) {
+            GrantDialog.super.call(this, config);
+        }
+        OO.inheritClass(GrantDialog, OO.ui.ProcessDialog);
+    
+        GrantDialog.static.name = 'GrantDialog';
+        GrantDialog.static.title = 'Temporary Permission Duration';
+        GrantDialog.static.actions = [
+            { action: 'cancel', label: 'Cancel', flags: 'safe' },
+            { action: 'submit', label: 'Grant', flags: ['primary', 'progressive'] }
+        ];
+    
+        GrantDialog.prototype.initialize = function () {
+            GrantDialog.super.prototype.initialize.call(this);
+            const layout = new OO.ui.PanelLayout({ padded: true, expanded: false });
+    
+            this.input = new OO.ui.TextInputWidget({
+                placeholder: 'Number of months',
+                type: 'number',
+                inputmode: 'numeric'
             });
+    
+            const label = new OO.ui.LabelWidget({
+                label: 'Please enter the number of months to grant temporary permission.'
+            });
+    
+            layout.$element.append(label.$element, this.input.$element);
+            this.$body.append(layout.$element);
+        };
+    
+        GrantDialog.prototype.getActionProcess = function (action) {
+            if (action === 'submit') {
+                const inputVal = parseInt(this.input.getValue(), 10);
+                if (isNaN(inputVal) || inputVal <= 0) {
+                    alert('Please enter a valid number greater than 0.');
+                    return;
+                }
+    
+                const date = new Date();
+                date.setMonth(date.getMonth() + inputVal);
+                const y = date.getFullYear(), m = ('0' + (date.getMonth() + 1)).slice(-2), d = ('0' + date.getDate()).slice(-2);
+                const wikitext = `{{TempSysop|${inputVal}|${y}|${m}|${d}||automsg=1}}`;
+    
+                RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions', 'done');
+            }
+            return GrantDialog.super.prototype.getActionProcess.call(this, action);
+        };
+    
+        const dialog = new GrantDialog({ size: 'medium' });
+        const windowManager = new OO.ui.WindowManager();
+        $(document.body).append(windowManager.$element);
+        windowManager.addWindows([dialog]);
+        windowManager.openWindow(dialog);
     };
 
 
