@@ -47,7 +47,7 @@ $(function () {
             [1, 4, 5, 15, 11, 9].includes(mw.config.get('wgNamespaceNumber'))
         );
 
-        const config = useDefault ? defaultConfig : pageConfigs[wgPageName] || [];
+        const config = pageConfigs[wgPageName] || (useDefault ? defaultConfig : []);
 
         $('span.mw-editsection-bracket:first-child').each(function () {
             try {
