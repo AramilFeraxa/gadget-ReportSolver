@@ -238,32 +238,38 @@ $(function () {
         }
         var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
         const pageTitle = mw.config.get('wgPageName');
-        new mw.Api().postWithEditToken({
-            action: 'parse', page: pageTitle, prop: 'wikitext', section: sectionNumber
-        }).done(function (result) {
-            let wikitext = result.parse.wikitext['*'];
-            if (editSummary === 'Closed') {
-                wikitext += '\n' + comment;
-            } else if (['Deleted', 'Kept', 'Redirected'].includes(editSummary)) {
-                comment = comment.trim();
-                if (!/[.!?}]$/.test(comment)) comment += '.';
-                comment += ' ~~~~';
-                wikitext += '\n----\n' + comment;
-            } else {
-                wikitext = wikitext.replace(/\{\{\s*[Ss]tatus\s*(?:\|[^}]*)?\}\}/g, '{{Status|' + status + '}}');
-                comment = comment.trim();
-                if (!/[.!?}]$/.test(comment)) comment += '.';
-                comment += ' ~~~~';
-                if (/\{\{(sr-request|SRUC|CU request|interwiki request)/i.test(wikitext)) {
-                    wikitext = wikitext.replace(/\|\s*[Ss]tatus\s*=\s*[^|]*\|/i, '|status = ' + status + '\n |');
-                }
-                wikitext += '\n:' + comment;
-            }
-            new mw.Api().postWithEditToken({
-                action: 'edit', title: pageTitle, section: sectionNumber, text: wikitext,
-                summary: '/* ' + sectionTitle + ' */ ' + editSummary + RS.summary, minor: true, nocreate: true
-            }).done(() => location.reload());
-        });
+		new mw.Api().postWithEditToken({
+		  action: 'parse', page: pageTitle, prop: 'wikitext', section: sectionNumber
+		}).done(function (result) {
+		  let fullWikitext = result.parse.wikitext['*'];
+		  let wikitext;
+
+		  if (wgPageName === 'Steward_requests/Global_permissions') {
+		    comment = comment.trim().replace(/([^\.\!\?}])$/, '$1.') + ' ~~~~';
+			const match = fullWikitext.match(/^((={2,6}\s.*?\s={2,6}))\n([\s\S]*)$/m);
+			const heading = match ? match[1] + '\n' : '';
+			const body = match ? match[3] : fullWikitext;
+		    const updated = body.replace(/\|\s*status\s*=\s*[^|}]*([\|}])/i, `|status = ${status}\n $1`);
+		    wikitext = `${heading}{{sr-closed|text=\n${updated}\n----\n${comment}\n}}`;
+		  } else if (editSummary === 'Closed') {
+		    wikitext = fullWikitext + '\n' + comment;
+		  } else if (['Deleted', 'Kept', 'Redirected'].includes(editSummary)) {
+		    comment = comment.trim().replace(/([^\.\!\?}])$/, '$1.') + ' ~~~~';
+		    wikitext = fullWikitext + '\n----\n' + comment;
+		  } else {
+		    wikitext = fullWikitext.replace(/\{\{\s*[Ss]tatus\s*(?:\|[^}]*)?\}\}/g, `{{Status|${status}}}`);
+		    if (/\{\{(sr-request|SRUC|CU request|interwiki request)/i.test(fullWikitext)) {
+		      wikitext = wikitext.replace(/\|\s*[Ss]tatus\s*=\s*[^|]*\|/i, `|status = ${status}\n |`);
+		    }
+		    comment = comment.trim().replace(/([^\.\!\?}])$/, '$1.') + ' ~~~~';
+		    wikitext += '\n:' + comment;
+		  }
+
+		  new mw.Api().postWithEditToken({
+		    action: 'edit', title: pageTitle, section: sectionNumber, text: wikitext,
+		    summary: `/* ${sectionTitle} */ ${editSummary}${RS.summary}`, minor: true, nocreate: true
+		  }).done(() => location.reload());
+		});
     };
 
     mw.loader.using('mediawiki.api', () => $(RS.setup));
