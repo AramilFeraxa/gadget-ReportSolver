@@ -43,6 +43,7 @@ $(function () {
         const useDefault = (
             wgPageName === 'Meta:Requests_for_help_from_a_sysop_or_bureaucrat' ||
             wgPageName.startsWith('Steward_requests/Global') ||
+            wgPageName.startsWith('Steward_requests/Miscellaneous') ||
             RSConfig.allowedPages.includes(wgPageName) ||
             [1, 4, 5, 15, 11, 9].includes(mw.config.get('wgNamespaceNumber'))
         );
