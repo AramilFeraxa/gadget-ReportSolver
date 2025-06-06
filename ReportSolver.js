@@ -247,7 +247,7 @@ $(function () {
 		  let fullWikitext = result.parse.wikitext['*'];
 		  let wikitext;
 
-		  if (wgPageName === 'Steward_requests/Global_permissions' && /Global (sysop|rename|rollback) for/i.test(sectionTitle)) {
+		  if (wgPageName === 'Steward_requests/Global_permissions' && /Global (sysop|rename|rollback|abuse) for/i.test(sectionTitle)) {
 		    comment = comment.trim().replace(/([^\.\!\?}])$/, '$1.') + ' ~~~~';
 			const match = fullWikitext.match(/^((={2,6}\s.*?\s={2,6}))\n([\s\S]*)$/m);
 			const heading = match ? match[1] + '\n' : '';
