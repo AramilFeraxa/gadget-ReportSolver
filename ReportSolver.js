@@ -56,7 +56,7 @@ $(function () {
             try {
                 const sectionNumber = $(this).siblings('a').attr('href').match(/section=(\d+)/)[1];
                 config.slice().reverse().forEach(option => {
-                    $(this).after(' | ');
+                    //$(this).after(' | ');
                     if (!['close', 'grant'].includes(option.class)) {
                         $(this).after($('<a>', {
                             href: 'javascript:void(0)',
