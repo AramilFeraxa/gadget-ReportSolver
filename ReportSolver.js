@@ -40,6 +40,12 @@ $(function () {
     ];
 
     RS.setup = function () {
+		mw.util.addCSS(`
+      		.mw-editsection a[class^="ReportSolver-edit-"]::before {
+        		content: " " !important;
+      		}
+   		`);
+		
         const useDefault = (
             wgPageName === 'Meta:Requests_for_help_from_a_sysop_or_bureaucrat' ||
             wgPageName.startsWith('Steward_requests/Global') ||
