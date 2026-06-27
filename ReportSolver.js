@@ -3,6 +3,7 @@ $(function () {
     const RS = {};
     const RSConfig = window.RSConfig || { allowedPages: [] };
     window.ReportSolver = RS;
+
     const wgPageName = mw.config.get('wgPageName');
 
     RS.summary = ' - with [[User:AramilFeraxa/ReportSolver|ReportSolver]]';
@@ -14,6 +15,8 @@ $(function () {
         dialogInfo: 'Template and signature will be inserted automatically.'
     };
 
+    // Page-specific action sets. Some request pages require different templates,
+    // labels or status values than the generic Steward request workflow.
     const pageConfigs = {
         'Meta:Requests_for_deletion': [
             { class: 'deleted', label: 'Mark as deleted', template: '{{Icon|delete|Deleted}}', summary: 'Deleted', status: 'deleted' },
@@ -40,12 +43,14 @@ $(function () {
     ];
 
     RS.setup = function () {
-		mw.util.addCSS(`
-      		.mw-editsection a[class^="ReportSolver-edit-"]::before {
-        		content: " " !important;
-      		}
-   		`);
-		
+        mw.util.addCSS(`
+            .mw-editsection a[class^="ReportSolver-edit-"]::before {
+                content: " " !important;
+            }
+        `);
+
+        // Enable the default action set only on request pages where the workflow is known
+        // to be compatible. Additional pages may be explicitly allowed through RSConfig.
         const useDefault = (
             wgPageName === 'Meta:Requests_for_help_from_a_sysop_or_bureaucrat' ||
             wgPageName.startsWith('Steward_requests/Global') ||
@@ -54,15 +59,21 @@ $(function () {
             [1, 4, 5, 15, 11, 9].includes(mw.config.get('wgNamespaceNumber'))
         );
 
-		let config = pageConfigs[wgPageName] || (useDefault ? defaultConfig : []);
-		if (wgPageName === 'Steward_requests/Global_permissions') {
-		    config = config.filter(option => option.class !== 'close');
-		}
+        let config = pageConfigs[wgPageName] || (useDefault ? defaultConfig : []);
+
+        // Global permissions requests have a custom closing format, so the generic
+        // "Close discussion" action is intentionally hidden there.
+        if (wgPageName === 'Steward_requests/Global_permissions') {
+            config = config.filter(option => option.class !== 'close');
+        }
+
         $('span.mw-editsection-bracket:first-child').each(function () {
             try {
                 const sectionNumber = $(this).siblings('a').attr('href').match(/section=(\d+)/)[1];
+
+                // Insert actions in reverse order so their final visual order matches
+                // the configuration array after repeated "after()" insertions.
                 config.slice().reverse().forEach(option => {
-                    //$(this).after(' | ');
                     if (!['close', 'grant'].includes(option.class)) {
                         $(this).after($('<a>', {
                             href: 'javascript:void(0)',
@@ -71,6 +82,7 @@ $(function () {
                             text: ' (C)'
                         }));
                     }
+
                     $(this).after($('<a>', {
                         href: 'javascript:void(0)',
                         class: `ReportSolver-mark-${option.class}`,
@@ -78,13 +90,16 @@ $(function () {
                         text: option.label
                     }));
                 });
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+            }
         });
 
         config.forEach(option => {
             $(`a.ReportSolver-mark-${option.class}`).click(function () {
                 const sectionNumber = $(this).data('section');
                 $(this).text('Processing...');
+
                 if (option.class === 'grant') {
                     RS.openGrantDialog(sectionNumber);
                 } else {
@@ -100,15 +115,20 @@ $(function () {
         $(document).off('click', '[class^="ReportSolver-edit-"]').on('click', '[class^="ReportSolver-edit-"]', function () {
             const sectionNumber = $(this).data('section');
             const action = $(this).attr('class').split('ReportSolver-edit-')[1];
+
+            // The comment button may be rendered from either the default or page-specific
+            // configuration, so both sources are searched here.
             const config = [...defaultConfig, ...(pageConfigs[wgPageName] || [])].find(c => c.class === action);
+
             RS.openDialog(sectionNumber, config);
         });
     };
-    
+
     RS.openDialog = function (sectionNumber, config) {
         function ReportSolverDialog(config) {
             ReportSolverDialog.super.call(this, config);
         }
+
         OO.inheritClass(ReportSolverDialog, OO.ui.ProcessDialog);
 
         ReportSolverDialog.static.name = "ReportSolverDialog";
@@ -120,6 +140,7 @@ $(function () {
 
         ReportSolverDialog.prototype.initialize = function () {
             ReportSolverDialog.super.prototype.initialize.call(this);
+
             var rootPanel = new OO.ui.PanelLayout({ padded: true, expanded: false });
 
             var commentInput = new OO.ui.MultilineTextInputWidget({ rows: 5, placeholder: 'Enter a comment...' });
@@ -128,9 +149,12 @@ $(function () {
             var infoElement = $("<span>", { html: MSG.dialogInfo, class: "red-text" });
 
             rootPanel.$element.append(commentInput.$element, infoElement, selectedOptionLabel.$element, editSummaryElement);
+
             this.commentInput = commentInput;
             this.$body.append(rootPanel.$element);
 
+            // Dialog-only styles are injected here to keep the gadget self-contained
+            // and avoid requiring a separate CSS page for a small UI surface.
             const styles = [
                 { class: "centered-label", css: "display: flex; align-items: center; justify-content: center; margin: 10px;" },
                 { class: "bold-text", css: "display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 10px;" },
@@ -151,91 +175,96 @@ $(function () {
         };
 
         ReportSolverDialog.prototype.getActionProcess = function (action) {
-    		var dialog = this;
-    		if (action === 'submit') {
-        		dialog.actions.setAbilities({ submit: false, cancel: false });
-        		dialog.pushPending();
+            var dialog = this;
 
-        		var comment = dialog.commentInput.getValue();
-        		var wikitext = config.template + (comment ? ' ' + comment : '');
+            if (action === 'submit') {
+                dialog.actions.setAbilities({ submit: false, cancel: false });
+                dialog.pushPending();
 
-        		RS.doEdit(sectionNumber, wikitext, config.summary, config.status);
-    		}
-    		return ReportSolverDialog.super.prototype.getActionProcess.call(this, action);
-		};
+                var comment = dialog.commentInput.getValue();
+                var wikitext = config.template + (comment ? ' ' + comment : '');
+
+                RS.doEdit(sectionNumber, wikitext, config.summary, config.status);
+            }
+
+            return ReportSolverDialog.super.prototype.getActionProcess.call(this, action);
+        };
 
         var dialog = new ReportSolverDialog({ size: "large" });
         var windowManager = new OO.ui.WindowManager();
+
         $(document.body).append(windowManager.$element);
         windowManager.addWindows([dialog]);
         windowManager.openWindow(dialog);
     };
 
-
-
     RS.openGrantDialog = function (sectionNumber) {
         function GrantDialog(config) {
             GrantDialog.super.call(this, config);
         }
+
         OO.inheritClass(GrantDialog, OO.ui.ProcessDialog);
-    
+
         GrantDialog.static.name = 'GrantDialog';
         GrantDialog.static.title = 'Temporary Permission Duration';
         GrantDialog.static.actions = [
             { label: MSG.dialogCancel, flags: "safe" },
             { action: 'submit', label: MSG.dialogConfirm, flags: ['primary', 'progressive'] }
         ];
-    
+
         GrantDialog.prototype.initialize = function () {
             GrantDialog.super.prototype.initialize.call(this);
+
             const layout = new OO.ui.PanelLayout({ padded: true, expanded: false });
-    
+
             this.input = new OO.ui.TextInputWidget({
                 placeholder: 'Number of months',
                 type: 'number',
                 inputmode: 'numeric'
             });
-    
+
             layout.$element.append(this.input.$element);
             this.$body.append(layout.$element);
         };
-    
+
         GrantDialog.prototype.getActionProcess = function (action) {
             const dialog = this;
-        
+
             if (action === 'submit') {
                 dialog.actions.setAbilities({ submit: false, cancel: false });
                 dialog.pushPending();
-        
+
                 const months = parseInt(dialog.input.getValue(), 10);
+
                 if (isNaN(months) || months <= 0) {
                     alert('Please enter a valid number greater than 0.');
                     dialog.popPending();
                     dialog.actions.setAbilities({ submit: true, cancel: true });
                     return;
                 }
-        
+
                 const date = new Date();
                 date.setMonth(date.getMonth() + months);
+
                 const y = date.getFullYear(),
-                      m = String(date.getMonth() + 1).padStart(2, '0'),
-                      d = String(date.getDate()).padStart(2, '0');
-        
+                    m = String(date.getMonth() + 1).padStart(2, '0'),
+                    d = String(date.getDate()).padStart(2, '0');
+
                 const wikitext = `{{TempSysop|${months}|${y}|${m}|${d}||automsg=1}}`;
-        
+
                 RS.doEdit(sectionNumber, wikitext, 'Granted temporary permissions', 'done');
             }
-        
+
             return GrantDialog.super.prototype.getActionProcess.call(this, action);
         };
-    
+
         const dialog = new GrantDialog({ size: 'medium' });
         const windowManager = new OO.ui.WindowManager();
+
         $(document.body).append(windowManager.$element);
         windowManager.addWindows([dialog]);
         windowManager.openWindow(dialog);
     };
-
 
     RS.doEdit = function (sectionNumber, comment, editSummary, status) {
         var $editSectionLink = $('span.mw-editsection a[href$="&section=' + sectionNumber + '"]');
@@ -245,40 +274,63 @@ $(function () {
         if ($headline.length === 0) {
             $headline = $mwEditSection.prevAll('h1, h2, h3, h4, h5, h6').first();
         }
+
         var sectionTitle = $headline.attr('id').replace(/_/g, ' ');
         const pageTitle = mw.config.get('wgPageName');
-		new mw.Api().postWithEditToken({
-		  action: 'parse', page: pageTitle, prop: 'wikitext', section: sectionNumber
-		}).done(function (result) {
-		  let fullWikitext = result.parse.wikitext['*'];
-		  let wikitext;
 
-		  if (wgPageName === 'Steward_requests/Global_permissions' && /Global (sysop|rename|rollback|abuse)|Abuse filter (helper|maintainer) for/i.test(sectionTitle)) {
-		    comment = comment.trim().replace(/([^\.\!\?}])$/, '$1.') + ' ~~~~';
-			const match = fullWikitext.match(/^((={2,6}\s.*?\s={2,6}))\n([\s\S]*)$/m);
-			const heading = match ? match[1] + '\n' : '';
-			const body = match ? match[3] : fullWikitext;
-		    const updated = body.replace(/\|\s*status\s*=\s*[^|}]*([\|}])/i, `|status = ${status}\n $1`);
-		    wikitext = `${heading}{{sr-closed|text=\n${updated}\n----\n${comment}\n}}`;
-		  } else if (editSummary === 'Closed') {
-		    wikitext = fullWikitext + '\n' + comment;
-		  } else if (['Deleted', 'Kept', 'Redirected'].includes(editSummary)) {
-		    comment = comment.trim().replace(/([^\.\!\?}])$/, '$1.') + ' ~~~~';
-		    wikitext = fullWikitext + '\n----\n' + comment;
-		  } else {
-		    wikitext = fullWikitext.replace(/\{\{\s*[Ss]tatus\s*(?:\|[^}]*)?\}\}/g, `{{Status|${status}}}`);
-		    if (/\{\{(sr-request|SRUC|CU request|interwiki request)/i.test(fullWikitext)) {
-		      wikitext = wikitext.replace(/\|\s*[Ss]tatus\s*=\s*[^|]*\|/i, `|status = ${status}\n |`);
-		    }
-		    comment = comment.trim().replace(/([^\.\!\?}])$/, '$1.') + ' ~~~~';
-		    wikitext += '\n:' + comment;
-		  }
+        new mw.Api().postWithEditToken({
+            action: 'parse',
+            page: pageTitle,
+            prop: 'wikitext',
+            section: sectionNumber
+        }).done(function (result) {
+            let fullWikitext = result.parse.wikitext['*'];
+            let wikitext;
 
-		  new mw.Api().postWithEditToken({
-		    action: 'edit', title: pageTitle, section: sectionNumber, text: wikitext,
-		    summary: `/* ${sectionTitle} */ ${editSummary}${RS.summary}`, minor: true, nocreate: true
-		  }).done(() => location.reload());
-		});
+            // Global permissions discussions use sr-closed and status parameters rather
+            // than a simple appended closure comment. This branch preserves the heading,
+            // updates the request status, and wraps the section in the expected template.
+            if (
+                wgPageName === 'Steward_requests/Global_permissions' &&
+                /Global (sysop|rename|rollback|abuse)|Abuse filter (helper|maintainer) for/i.test(sectionTitle)
+            ) {
+                comment = comment.trim().replace(/([^\.\!\?}])$/, '$1.') + ' ~~~~';
+
+                const match = fullWikitext.match(/^((={2,6}\s.*?\s={2,6}))\n([\s\S]*)$/m);
+                const heading = match ? match[1] + '\n' : '';
+                const body = match ? match[3] : fullWikitext;
+
+                const updated = body.replace(/\|\s*status\s*=\s*[^|}]*([\|}])/i, `|status = ${status}\n $1`);
+
+                wikitext = `${heading}{{sr-closed|text=\n${updated}\n----\n${comment}\n}}`;
+            } else if (editSummary === 'Closed') {
+                wikitext = fullWikitext + '\n' + comment;
+            } else if (['Deleted', 'Kept', 'Redirected'].includes(editSummary)) {
+                comment = comment.trim().replace(/([^\.\!\?}])$/, '$1.') + ' ~~~~';
+                wikitext = fullWikitext + '\n----\n' + comment;
+            } else {
+                // Generic request handling: update common status templates and request
+                // parameters where possible, then append the closing comment.
+                wikitext = fullWikitext.replace(/\{\{\s*[Ss]tatus\s*(?:\|[^}]*)?\}\}/g, `{{Status|${status}}}`);
+
+                if (/\{\{(sr-request|SRUC|CU request|interwiki request)/i.test(fullWikitext)) {
+                    wikitext = wikitext.replace(/\|\s*[Ss]tatus\s*=\s*[^|]*\|/i, `|status = ${status}\n |`);
+                }
+
+                comment = comment.trim().replace(/([^\.\!\?}])$/, '$1.') + ' ~~~~';
+                wikitext += '\n:' + comment;
+            }
+
+            new mw.Api().postWithEditToken({
+                action: 'edit',
+                title: pageTitle,
+                section: sectionNumber,
+                text: wikitext,
+                summary: `/* ${sectionTitle} */ ${editSummary}${RS.summary}`,
+                minor: true,
+                nocreate: true
+            }).done(() => location.reload());
+        });
     };
 
     mw.loader.using('mediawiki.api', () => $(RS.setup));
